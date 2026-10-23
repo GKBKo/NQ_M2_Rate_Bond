@@ -3,118 +3,38 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NASDAQ · M2 · 기준금리 · 글로벌 유동성 매크로 대시보드</title>
+<title>Macro Lens — 나스닥 매크로 대시보드</title>
 <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
 <style>
-  * { box-sizing: border-box; }
-  html, body { margin:0; padding:0; }
-  body {
-    background:#ffffff; color:#1e293b;
-    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Malgun Gothic',sans-serif;
-    font-size:14px;
-  }
-  /* 레이아웃 */
-  .app { display:flex; min-height:100vh; }
-  .sidebar {
-    width:270px; flex-shrink:0; background:#f1f5f9; border-right:1px solid #e2e8f0;
-    padding:16px 16px 40px; overflow-y:auto; height:100vh; position:sticky; top:0;
-  }
-  .content { flex:1; padding:18px 22px 40px; min-width:0; }
-  .sb-h { font-weight:800; font-size:0.95rem; margin:18px 0 8px; }
-  .sb-h:first-child { margin-top:0; }
-  .sb-sub { font-size:0.78rem; color:#475569; font-weight:600; margin:10px 0 4px; }
-  hr.sb-div { border:none; border-top:1px solid #cbd5e1; margin:14px 0; }
-  /* 컨트롤 */
-  .chips { display:flex; flex-wrap:wrap; gap:6px; }
-  .chip {
-    padding:5px 10px; border:1px solid #cbd5e1; border-radius:6px; background:#fff;
-    cursor:pointer; font-size:0.8rem; user-select:none;
-  }
-  .chip.active { background:#1d4ed8; color:#fff; border-color:#1d4ed8; font-weight:700; }
-  label.rdo, label.chk { display:flex; align-items:center; gap:7px; padding:3px 0; cursor:pointer; font-size:0.85rem; }
-  input[type=date] { width:100%; padding:6px 8px; border:1px solid #cbd5e1; border-radius:6px; font-size:0.85rem; }
-  select { width:100%; padding:5px 6px; border:1px solid #cbd5e1; border-radius:6px; font-size:0.8rem; margin-bottom:6px; background:#fff; }
-  input[type=range] { width:100%; }
-  .slider-val { font-size:0.8rem; font-weight:700; color:#1d4ed8; }
-  /* 헤더 */
-  .dash-title {
-    font-family:'Courier New',monospace; font-size:1.4rem; font-weight:800; letter-spacing:0.04em;
-    color:#0f172a; border-bottom:2px solid #1e3a8a; padding-bottom:10px; margin:0 0 4px;
-  }
-  .dash-subtitle { font-size:0.82rem; color:#475569; margin-bottom:16px; }
-  /* 메트릭 카드 */
-  .metric-row { display:flex; gap:12px; margin-bottom:16px; flex-wrap:wrap; }
-  .metric-card {
-    background:#f8fafc; border:1px solid #cbd5e1; border-radius:8px; padding:10px 18px;
-    min-width:150px; flex:1; box-shadow:0 1px 2px rgba(0,0,0,0.04);
-  }
-  .metric-label { font-size:0.7rem; color:#64748b; letter-spacing:0.05em; text-transform:uppercase; font-weight:600; }
-  .metric-value { font-size:1.3rem; font-weight:800; color:#0f172a; font-family:'Courier New',monospace; }
-  .metric-delta { font-size:0.76rem; margin-top:2px; font-weight:600; }
-  .delta-up { color:#dc2626; } .delta-down { color:#2563eb; } .delta-neu { color:#64748b; }
-  hr.dash-divider { border:none; border-top:1px solid #cbd5e1; margin:6px 0 14px; }
-  /* 차트 */
-  #chart-wrap { position:relative; width:100%; }
-  #value-box {
-    position:absolute; top:8px; left:8px; z-index:20; background:rgba(255,255,255,0.94);
-    border:1px solid #cbd5e1; border-radius:6px; padding:8px 10px; font-size:10px;
-    line-height:1.55; color:#1e293b; white-space:nowrap; box-shadow:0 1px 3px rgba(0,0,0,0.08);
-    pointer-events:none;
-  }
-  #plotly-div .hoverlayer .hovertext { display:none !important; }
-  .src-note { font-size:0.72rem; color:#64748b; margin-top:8px; text-align:right; }
-  .src-note a { color:#1d4ed8; }
-  .status { padding:10px 14px; border-radius:6px; font-size:0.85rem; margin-bottom:12px; }
-  .status.err { background:#fef2f2; border:1px solid #fecaca; color:#b91c1c; }
-  .status.warn { background:#fffbeb; border:1px solid #fde68a; color:#92400e; }
-  .updated { font-size:0.72rem; color:#94a3b8; }
-  /* 모바일 */
-  .hamburger {
-    display:none; position:fixed; top:10px; left:10px; z-index:1000; background:#1d4ed8; color:#fff;
-    border:none; border-radius:6px; padding:8px 12px; font-size:1rem; cursor:pointer;
-  }
-  .overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.35); z-index:900; }
-  @media (max-width: 860px) {
-    .hamburger { display:block; }
-    .sidebar {
-      position:fixed; left:0; top:0; height:100vh; z-index:950; transform:translateX(-100%);
-      transition:transform 0.25s ease; box-shadow:2px 0 12px rgba(0,0,0,0.15);
-    }
-    .app.open .sidebar { transform:translateX(0); }
-    .app.open .overlay { display:block; }
-    .content { padding:52px 12px 32px; }
-    .dash-title { font-size:1.05rem; }
-    .metric-card { min-width:calc(50% - 6px); padding:8px 12px; }
-    .metric-value { font-size:1.05rem; }
-  }
-  /* 지표별 스타일 옵션 */
-  .ind-item { margin-bottom:9px; }
-  .ind-item .chk { padding:2px 0; }
-  .ind-opts { display:flex; gap:5px; align-items:center; margin:3px 0 0 22px; }
-  .ind-opts input[type=color] { width:30px; height:24px; padding:0; border:1px solid #cbd5e1; border-radius:4px; cursor:pointer; background:#fff; flex:0 0 auto; }
-  .ind-opts input[type=number] { width:50px; padding:3px 4px; border:1px solid #cbd5e1; border-radius:4px; font-size:0.75rem; margin:0; flex:0 0 auto; }
-  .ind-opts select { flex:1 1 auto; min-width:0; padding:3px 4px; font-size:0.72rem; margin:0; }
+:root{--ink:#192b37;--muted:#7a8790;--accent:#167d8d;--border:#e5eaed;--bg:#f5f7f8}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:13px -apple-system,BlinkMacSystemFont,"Segoe UI","Malgun Gothic",sans-serif;-webkit-font-smoothing:antialiased}button,input,select{font:inherit}button,summary{cursor:pointer}button{color:inherit}button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:3px}button{transition:background .15s,color .15s}input{accent-color:var(--accent)}
+.app{display:flex;min-height:100vh}.sidebar{width:260px;flex-shrink:0;background:#fff;border-right:1px solid var(--border);height:100vh;position:sticky;top:0;overflow-y:auto;padding:26px 20px 32px;scrollbar-width:thin}.brand{display:flex;gap:10px;align-items:center;font-size:18px;font-weight:750;letter-spacing:-.6px;margin-bottom:32px}.brand-mark{display:grid;place-items:center;width:32px;height:32px;border-radius:10px;background:var(--ink);color:white;font-size:19px}.brand small{display:block;font-size:9px;color:var(--muted);letter-spacing:2px;font-weight:500;margin-top:4px}.sb-h{font-size:12px;font-weight:700;margin:22px 0 12px}.sb-sub{font-size:11px;color:var(--muted);margin:12px 0 6px}.sb-div{border:0;border-top:1px solid var(--border);margin:24px 0}.settings-label{font-size:10px;letter-spacing:1.5px;color:var(--muted);margin-bottom:18px}.content{flex:1;min-width:0;padding:30px 36px 28px;max-width:1900px}.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:32px;gap:16px}.eyebrow{font-size:10px;letter-spacing:2px;color:var(--muted);font-weight:600}.dash-title{font-size:26px;font-weight:650;letter-spacing:-1px;margin:8px 0}.dash-subtitle{color:var(--muted);font-size:12px;line-height:1.7}.updated{font-size:11px;color:var(--muted)}.data-badge{display:flex;align-items:center;gap:8px;padding:9px 12px;background:white;border:1px solid var(--border);border-radius:24px;white-space:nowrap}.data-badge:before{content:"";width:6px;height:6px;background:var(--accent);border-radius:50%}.hero{display:flex;align-items:center;gap:35px;margin:0 0 28px;flex-wrap:wrap}.quote-label{font-size:11px;color:var(--muted);margin-bottom:8px}.quote-value{font-size:38px;font-weight:650;letter-spacing:-1.5px;font-variant-numeric:tabular-nums}.quote-value small{font-size:12px;font-weight:400;color:var(--muted);letter-spacing:0;margin-left:8px}.quote-delta{display:inline-block;font-size:12px;font-weight:600;margin-top:8px}.hero-stat{border-left:1px solid #dce3e6;padding-left:28px}.hero-stat strong{display:block;font-size:17px;font-weight:600;margin-top:10px;font-variant-numeric:tabular-nums}.hero-stat span{font-size:11px;color:var(--muted)}.chart-panel{background:#fff;border:1px solid var(--border);border-radius:16px;box-shadow:0 4px 20px #182c3b03;overflow:hidden}.chart-toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:18px 22px;border-bottom:1px solid #eef1f3}.toolbar-title{font-weight:650;font-size:13px}.toolbar-title small{display:block;font-size:10px;font-weight:400;color:var(--muted);margin-top:5px}.chips{display:flex;gap:3px;background:#f2f5f6;border-radius:8px;padding:4px}.chip{border:0;background:transparent;color:#71808a;border-radius:5px;padding:6px 10px;font-size:11px;cursor:pointer}.chip:hover{background:#e6edef}.chip.active{background:#fff;color:var(--ink);box-shadow:0 1px 4px #20333e15;font-weight:700}#chart-wrap{position:relative;padding:4px 10px 0}#value-box{min-height:37px;margin:6px 14px 0;padding:9px 0;font-size:11px;line-height:1.7;color:#647680;display:flex;align-items:center;gap:16px;flex-wrap:wrap;font-variant-numeric:tabular-nums}#value-box b{font-size:10px;color:#84919a;font-weight:500}#value-box br{display:none}#plotly-div .hoverlayer .hovertext{display:none!important}.chart-footer{border-top:1px solid #eef1f3;padding:12px 22px;display:flex;justify-content:space-between;gap:8px;color:var(--muted);font-size:10px;flex-wrap:wrap}.src-note{margin-top:18px;color:#87939b;font-size:10px;line-height:1.9}.src-note summary{font-size:11px;display:inline-block;color:#61737e}.src-note p{max-width:1000px}.src-note a{color:var(--accent)}.status:empty{display:none}.status.err,.status.warn{padding:12px;border-radius:8px;margin-bottom:16px;background:#fff2ef;color:#a64d3d}.date-grid{display:grid;grid-template-columns:1fr;gap:4px}input[type=date],select{width:100%;border:1px solid var(--border);border-radius:7px;background:#fafbfc;color:#455864;padding:8px;font-size:11px}label.chk,label.rdo{display:flex;align-items:center;gap:8px;padding:8px 0;cursor:pointer;font-size:12px;line-height:1.5}label input{margin:0;flex-shrink:0;width:14px;height:14px}input[type=range]{width:100%;margin:13px 0 0;height:4px}.slider-val{color:var(--accent);font-weight:700;float:right}.ind-item{border:1px solid transparent;border-bottom-color:#edf1f3;padding:5px 8px;border-radius:7px;margin:3px -8px}.ind-item:has(input[data-ind]:checked){background:#f1f7f7;border-color:#e2eeee}.ind-opts{display:none;gap:5px;padding:3px 0 8px 22px;align-items:center}.ind-item:has(input[data-ind]:checked) .ind-opts{display:flex}.ind-opts input[type=color]{width:25px;height:25px;padding:2px;border:1px solid #d8e3e6;background:white;border-radius:5px}.ind-opts input[type=number]{width:44px;font-size:10px;padding:5px 3px;border:1px solid #d8e3e6;border-radius:5px}.ind-opts select{flex:1;min-width:0;padding:5px 3px;font-size:10px}.settings-details{border-top:1px solid var(--border);margin-top:22px;padding-top:18px}.settings-details summary{font-size:12px;font-weight:600;list-style:none;display:flex;justify-content:space-between}.settings-details summary:after{content:'+';color:#7c8d96}.settings-details[open] summary:after{content:'−'}.settings-details .sb-div{display:none}.settings-details .sb-h{margin-top:14px}.reset-btn{background:white;border:1px solid var(--border);border-radius:7px;padding:8px 12px;font-size:11px;color:#647780;width:100%;margin-top:24px}.reset-btn:hover{background:#f3f7f8}.hamburger{display:none}.overlay{display:none}.delta-up{color:#bf6350}.delta-down{color:#467cba}.delta-neu{color:var(--muted)}.modebar{opacity:0.7}.modebar-btn{padding:4px!important}
+@media(min-width:1500px){.content{padding:36px 48px}.sidebar{width:278px;padding:30px 26px}}
+@media(max-width:1100px){.content{padding:24px 20px}.hero{gap:22px}.hero-stat{padding-left:20px}.quote-value{font-size:34px}.data-badge{display:none}}
+@media(max-width:860px){.hamburger{display:block;position:fixed;top:15px;right:16px;z-index:1000;border:1px solid #dce5e8;background:#fff;border-radius:8px;padding:9px 12px;font-size:11px;box-shadow:0 2px 8px #192b3710}.sidebar{position:fixed;left:0;top:0;z-index:950;width:280px;transform:translateX(-100%);transition:transform .2s}.app.open .sidebar{transform:translateX(0)}.app.open .overlay{display:block;position:fixed;inset:0;background:#13283355;backdrop-filter:blur(3px);z-index:900}.content{padding:24px 14px}.topbar{margin-bottom:24px;padding-right:56px}.dash-title{font-size:23px}.dash-subtitle{font-size:11px}.hero{gap:18px;margin-bottom:22px}.hero-stat{padding-left:16px}.hero-stat:last-child{display:none}.quote-value{font-size:31px}.hero-stat strong{font-size:14px}.chart-toolbar{padding:14px;gap:14px}.chips{width:100%;justify-content:space-between}.chip{padding:6px 8px}.chart-panel{border-radius:12px}#chart-wrap{padding:0}#value-box{margin:8px 14px 0;gap:8px;font-size:10px}.chart-footer{padding:12px 14px}.eyebrow{font-size:9px}.src-note{padding:0 3px}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
 <body>
-<button class="hamburger" id="hamburger">&#9776; 설정</button>
+<button class="hamburger" id="hamburger" aria-label="차트 설정 열기" aria-expanded="false" aria-controls="sidebar">☰ 설정</button>
 <div class="app" id="app">
   <div class="overlay" id="overlay"></div>
   <aside class="sidebar" id="sidebar">
-    <div class="sb-h">분석 기간</div>
-    <div class="chips" id="period-chips"></div>
+    <div class="brand"><span class="brand-mark">∿</span><div>Macro Lens<small>MARKET OBSERVATORY</small></div></div>
+    <div class="settings-label">CHART SETTINGS</div>
+    <div class="sb-h">날짜 범위</div>
     <div class="sb-sub">시작일</div>
     <input type="date" id="start-date">
     <div class="sb-sub">종료일</div>
     <input type="date" id="end-date">
 
-    <hr class="sb-div">
+    <details class="settings-details"><summary>축 · 차트 스타일</summary>
     <div class="sb-h">Y축 설정</div>
     <div id="ymode-group"></div>
 
     <hr class="sb-div">
     <div class="sb-h">차트 타입</div>
-    <div id="ctype-group"></div>
+    <div id="ctype-group"></div></details>
 
     <hr class="sb-div">
     <div class="sb-h">회귀 채널</div>
@@ -129,28 +49,31 @@
     <div class="sb-h">지표 표시</div>
     <div id="ind-group"></div>
 
-    <div id="axis-section">
+    <details class="settings-details" id="axis-section"><summary>지표별 축 배정</summary>
       <hr class="sb-div">
       <div class="sb-h">축 배정 (지표별 Y축)</div>
       <div id="axis-group"></div>
-    </div>
+    </details>
+    <button class="reset-btn" id="reset-view">차트 기본 설정으로 복원</button>
   </aside>
 
   <main class="content">
-    <div class="dash-title">NASDAQ · M2 · 기준금리 · 글로벌 유동성 매크로 대시보드</div>
-    <div class="dash-subtitle">NASDAQ Composite · 미국 M2 통화량 · 연방기금금리 · Global Excess Liquidity Proxy(근사, 시프트 없음) — FRED/Yahoo Finance</div>
+    <header class="topbar"><div><div class="eyebrow">MARKET / MACRO OVERVIEW</div><h1 class="dash-title">시장의 흐름을 한눈에.</h1><div class="dash-subtitle">나스닥과 글로벌 매크로 지표의 움직임을 비교하세요.</div></div><div class="data-badge"><span class="updated" id="updated"></span></div></header>
+    <section class="hero" aria-label="선택 기간 나스닥 요약"><div><div class="quote-label">NASDAQ COMPOSITE <span id="quote-date"></span></div><div class="quote-value" id="quote-value">—</div><div class="quote-delta" id="quote-delta"></div></div><div class="hero-stat"><span>기간 최고 종가</span><strong id="period-high">—</strong></div><div class="hero-stat"><span>기간 최저 종가</span><strong id="period-low">—</strong></div><div class="hero-stat"><span>분석 기간</span><strong id="period-label">—</strong></div></section>
     <div id="status"></div>
+    <section class="chart-panel" aria-label="매크로 비교 차트">
+    <div class="chart-toolbar"><div class="toolbar-title">가격과 매크로 지표<small id="chart-caption">나스닥 · 로그 회귀 채널</small></div><div class="chips" id="period-chips"></div></div>
     <div id="chart-wrap">
       <div id="value-box"></div>
       <div id="plotly-div" style="width:100%;"></div>
     </div>
-    <div class="src-note">
+    <div class="chart-footer"><span id="range-note"></span><span>드래그로 확대 · 더블클릭으로 초기화</span></div></section>
+    <details class="src-note"><summary>데이터 출처 및 계산 안내 ↗</summary><p>
       데이터 출처: Yahoo Finance (나스닥) · FRED (M2SL, FEDFUNDS, WALCL, ECBASSETSW, JPNASSETS, DEXUSEU, DEXJPUS, DGS10, DGS30) ·
       <a href="https://fred.stlouisfed.org" target="_blank">fred.stlouisfed.org</a><br>
       ※ '글로벌 유동성 프록시'는 Fed+ECB+BOJ 대차대조표(USD 환산) 합산 YoY%를 실제 관측 날짜에 표시한 근사치이며,
       MacroMicro의 'Global Excess Liquidity Proxy'(GDP가중 M2·정책금리, PBOC 포함) 원 지표와 수치가 동일하지 않습니다.
-      <div class="updated" id="updated"></div>
-    </div>
+      </p></details>
   </main>
 </div>
 
@@ -159,12 +82,12 @@
 // ══════════════════════════════════════════════════════════════════════════
 // 색상 (원본과 동일)
 const COLORS = {
-  nasdaq:"#1d4ed8", m2:"#dc2626", fed:"#15803d", liquidity:"#7c3aed",
+  nasdaq:"#167d8d", m2:"#dc2626", fed:"#15803d", liquidity:"#7c3aed",
   dgs10:"#0891b2", dgs30:"#c2410c", spread:"#65a30d"
 };
 // 지표별 기본 스타일 (색상 / 굵기 / 선종류) — 사용자 조정 가능
 const DEF_STYLE = {
-  nasdaq:{color:"#1d4ed8", width:1.8, dash:"solid"},
+  nasdaq:{color:"#167d8d", width:2, dash:"solid"},
   m2:{color:"#dc2626", width:1, dash:"dot"},
   fed:{color:"#15803d", width:1, dash:"dot"},
   liquidity:{color:"#7c3aed", width:1, dash:"dashdot"},
@@ -189,10 +112,10 @@ const INDICATORS = [
   {id:"nasdaq",   label:"나스닥",                              axLabel:"나스닥 축",        axDefault:0},
   {id:"m2",       label:"M2 (미국 통화량)",                    axLabel:"M2 축",            axDefault:1},
   {id:"fed",      label:"기준금리 (FFR)",                      axLabel:"기준금리 축",      axDefault:3},
-  {id:"liquidity",label:"글로벌 유동성 프록시 (Fed+ECB+BOJ, 시프트 없음)", axLabel:"글로벌 유동성 축", axDefault:4},
+  {id:"liquidity",label:"글로벌 유동성", axLabel:"글로벌 유동성 축", axDefault:4},
   {id:"dgs10",    label:"美 국채금리 10년물",                  axLabel:"10년물 축",        axDefault:5},
   {id:"dgs30",    label:"美 국채금리 30년물",                  axLabel:"30년물 축",        axDefault:6},
-  {id:"spread",   label:"10Y-30Y 금리차 (스프레드)",          axLabel:"금리차 축",        axDefault:7},
+  {id:"spread",   label:"30Y−10Y 금리차",          axLabel:"금리차 축",        axDefault:7},
 ];
 const PERIODS = ["YTD","1Y","3Y","5Y","10Y","20Y","30Y","MAX"];
 
@@ -315,6 +238,14 @@ function render(){
   const ndc=nd.close;
   last.nasdaq=ndc[ndc.length-1];
   const chgNd=(ndc[ndc.length-1]/ndc[0]-1)*100;
+  document.getElementById('quote-value').innerHTML=fmt(last.nasdaq,2)+'<small>INDEX</small>';
+  document.getElementById('quote-date').textContent=' · '+nd.dates[nd.dates.length-1];
+  document.getElementById('quote-delta').innerHTML=deltaH(chgNd,'%')+' <span style="color:var(--muted);font-weight:400">선택 기간</span>';
+  document.getElementById('period-high').textContent=fmt(Math.max(...ndc),2);
+  document.getElementById('period-low').textContent=fmt(Math.min(...ndc),2);
+  document.getElementById('period-label').textContent=nd.dates[0].slice(0,7)+' — '+nd.dates[nd.dates.length-1].slice(0,7);
+  document.getElementById('range-note').textContent=start+' — '+end+' · '+Object.values(S.show).filter(Boolean).length+'개 지표 선택';
+  document.getElementById('chart-caption').textContent=S.ymode+(S.showReg&&S.show.nasdaq?' · '+(S.regLog?'로그':'선형')+' 회귀 ±'+S.stdMult.toFixed(1)+'σ':'');
   cards+=card("나스닥 (최근)", fmt(last.nasdaq,0), deltaH(chgNd,"%")+" (기간 내)");
   if(m2&&m2.values.length){ last.m2=m2.values[m2.values.length-1];
     cards+=card("M2 (십억달러)", fmt(last.m2,0), deltaH(last.m2-m2.values[0],"B")+" (기간 내)"); }
@@ -341,7 +272,7 @@ function render(){
     const ax=AX.nasdaq;
     if(S.ctype==="Bar+Lines (봉차트)"){
       traces.push({type:"candlestick", x:nd.dates, open:nd.open, high:nd.high, low:nd.low, close:nd.close,
-        increasing:{line:{color:"#dc2626"}}, decreasing:{line:{color:"#1d4ed8"}},
+        increasing:{line:{color:"#dc2626"}}, decreasing:{line:{color:"#167d8d"}},
         name:"나스닥 (봉차트)", yaxis:ax, showlegend:true});
     } else {
       const nv=normalize({dates:nd.dates,values:nd.close}, S.ymode);
@@ -362,9 +293,9 @@ function render(){
         let cV,uV,lV;
         if(S.regLog){ cV=ctr.map(Math.exp); uV=ctr.map(c=>Math.exp(c+S.stdMult*std)); lV=ctr.map(c=>Math.exp(c-S.stdMult*std)); }
         else { cV=ctr.slice(); uV=ctr.map(c=>c+S.stdMult*std); lV=ctr.map(c=>c-S.stdMult*std); }
-        traces.push({type:"scatter",mode:"lines",x:dts,y:cV,name:"중심 회귀선",line:{color:"#ea580c",width:1.4,dash:"dash"},yaxis:ax});
-        traces.push({type:"scatter",mode:"lines",x:dts,y:uV,name:`상단 채널 (+${S.stdMult.toFixed(1)}σ)`,line:{color:"rgba(234,88,12,0.55)",width:1,dash:"dot"},yaxis:ax});
-        traces.push({type:"scatter",mode:"lines",x:dts,y:lV,name:`하단 채널 (-${S.stdMult.toFixed(1)}σ)`,line:{color:"rgba(234,88,12,0.55)",width:1,dash:"dot"},yaxis:ax});
+        traces.push({type:"scatter",mode:"lines",x:dts,y:cV,name:"중심 회귀선",line:{color:"#9a8461",width:1.4,dash:"dash"},yaxis:ax});
+        traces.push({type:"scatter",mode:"lines",x:dts,y:uV,name:`상단 채널 (+${S.stdMult.toFixed(1)}σ)`,line:{color:"rgba(154,132,97,0.52)",width:1,dash:"dot"},yaxis:ax});
+        traces.push({type:"scatter",mode:"lines",x:dts,y:lV,fill:"tonexty",fillcolor:"rgba(154,132,97,0.055)",name:`하단 채널 (-${S.stdMult.toFixed(1)}σ)`,line:{color:"rgba(154,132,97,0.52)",width:1,dash:"dot"},yaxis:ax});
       }
     }
     reg(ax,"나스닥",COLORS.nasdaq);
@@ -403,7 +334,7 @@ function render(){
   if(S.show.spread && spread && spread.values.length){
     const v=normalize(spread,S.ymode);
     traces.push({type:"scatter",mode:"lines",x:v.dates,y:v.values,name:"30Y-10Y 금리차 (%p)",line:lineOf('spread'),yaxis:AX.spread});
-    reg(AX.spread,"10Y-30Y금리차",COLORS.spread);
+    reg(AX.spread,"30Y−10Y금리차",COLORS.spread);
   }
 
   // ── Y축 레이아웃 ──
@@ -416,22 +347,22 @@ function render(){
   }
   function axisCfg(title,color,log,side,overlaying,position,anchor){
     const cfg={ title:{text:title,font:{color:color,size:11}}, tickfont:{color:color,size:10},
-      showgrid:(overlaying===undefined||overlaying===null), gridcolor:"#e2e8f0",
-      zeroline:false, linecolor:"#cbd5e1" };
+      showgrid:(overlaying===undefined||overlaying===null), gridcolor:"#eef2f4",
+      zeroline:false, linecolor:"#e5eaed" };
     if(log) cfg.type="log";
     if(overlaying){ cfg.overlaying="y"; cfg.side=side; cfg.showgrid=false; }
     if(position!==undefined && position!==null){ cfg.position=position; cfg.anchor=anchor||"free"; }
     return cfg;
   }
 
-  const layout={ xaxis:{ title:"날짜", showgrid:true, gridcolor:"#e2e8f0", linecolor:"#cbd5e1",
+  const layout={ xaxis:{ title:"", showgrid:false, gridcolor:"#eef2f4", linecolor:"#e5eaed",
       rangeslider:{visible:false}, showspikes:true, spikemode:"across", spikesnap:"cursor",
       spikedash:"dot", spikethickness:1, spikecolor:"#94a3b8" },
-    plot_bgcolor:"#ffffff", paper_bgcolor:"#ffffff", font:{color:"#1e293b",size:11},
+    plot_bgcolor:"#ffffff", paper_bgcolor:"#ffffff", font:{family:"Segoe UI, Malgun Gothic, sans-serif",color:"#71818b",size:11},
     legend:{ orientation:"h", yanchor:"bottom", y:1.01, xanchor:"left", x:0,
-      font:{size:10,color:"#1e293b"}, bgcolor:"rgba(255,255,255,0.85)", bordercolor:"#cbd5e1", borderwidth:1 },
-    hovermode:"x", margin:{l:55,r:65,t:60,b:50},
-    height: window.innerWidth<=860 ? 460 : 680 };
+      font:{size:11,color:"#647782"}, bgcolor:"rgba(255,255,255,0)", borderwidth:0, itemclick:false, itemdoubleclick:false },
+    hovermode:"x", dragmode:"zoom", margin:{l:55,r:35,t:55,b:42},
+    height: window.innerWidth<=860 ? 440 : 560 };
 
   if(S.ymode==="다중 Y축"){
     const used=new Set(Object.keys(activeAxis));
@@ -472,12 +403,12 @@ function render(){
       meta:"hoverdot", hoverinfo:"skip", showlegend:false, cliponaxis:false });
   });
 
-  Plotly.react('plotly-div', traces, layout, {responsive:true, displaylogo:false});
+  Plotly.react('plotly-div', traces, layout, {responsive:true, displaylogo:false, displayModeBar:"hover", modeBarButtonsToRemove:["select2d","lasso2d","autoScale2d"], toImageButtonOptions:{filename:"Macro_Lens",scale:2}});
 
   // ── 값 박스 ──
   const dateLabel = nd.dates[nd.dates.length-1];
   const bl=[];
-  function bx(cond,color,name,val){ if(cond) bl.push(`<span style="color:${color}">●</span> ${name}: ${val}`); }
+  function bx(cond,color,name,val){ if(cond) bl.push(`<span><span style="color:${color}">●</span> ${name}: ${val}</span>`); }
   bx(S.show.nasdaq, COLORS.nasdaq,"나스닥", fmt(last.nasdaq,0));
   bx(S.show.m2&&m2&&m2.values.length, COLORS.m2,"M2", fmt(last.m2,0));
   bx(S.show.fed&&fed&&fed.values.length, COLORS.fed,"기준금리", fmt(last.fed,2)+"%");
@@ -515,7 +446,7 @@ function render(){
     const lines=pts.filter(p=>isIndicatorPt(p) && p.data.name)
       .map(p=>{ const c=(p.data.line&&p.data.line.color)?p.data.line.color:"#334155";
         const yv=(p.y!==undefined&&p.y!==null)?p.y:p.close;
-        return `<span style="color:${c}">●</span> ${p.data.name}: ${(typeof yv==='number')?yv.toLocaleString(undefined,{maximumFractionDigits:2}):yv}`; })
+        return `<span><span style="color:${c}">●</span> ${p.data.name}: ${(typeof yv==='number')?yv.toLocaleString(undefined,{maximumFractionDigits:2}):yv}</span>`; })
       .join("<br>");
     if(lines) box.innerHTML=`<b>${xL} 기준</b><br>`+lines;
 
@@ -542,14 +473,14 @@ function render(){
   });
   pd.on('plotly_unhover', function(){ box.innerHTML=staticHTML; clearDots(); });
 
-  document.getElementById('updated').textContent="데이터 기준일: "+todayStr();
+  document.getElementById('updated').textContent="업데이트 "+todayStr();
 }
 
 // ── UI 구성 ────────────────────────────────────────────────────────────────
 function buildUI(){
   // 기간 칩
   const pc=document.getElementById('period-chips');
-  pc.innerHTML=PERIODS.map(p=>`<span class="chip${p===S.period?' active':''}" data-p="${p}">${p}</span>`).join("");
+  pc.innerHTML=PERIODS.map(p=>`<button type="button" class="chip${p===S.period?' active':''}" data-p="${p}">${p}</button>`).join("");
   pc.querySelectorAll('.chip').forEach(el=>el.onclick=()=>{
     S.period=el.dataset.p;
     pc.querySelectorAll('.chip').forEach(c=>c.classList.toggle('active',c.dataset.p===S.period));
@@ -560,8 +491,8 @@ function buildUI(){
   // 날짜
   document.getElementById('start-date').value=S.start;
   document.getElementById('end-date').value=S.end;
-  document.getElementById('start-date').onchange=e=>{ S.start=e.target.value; render(); };
-  document.getElementById('end-date').onchange=e=>{ S.end=e.target.value; render(); };
+  document.getElementById('start-date').onchange=e=>{ S.start=e.target.value; S.period=null; document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active')); render(); };
+  document.getElementById('end-date').onchange=e=>{ S.end=e.target.value; S.period=null; document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active')); render(); };
   // Y축 모드
   const ym=["다중 Y축","동일 Y축","지수화 (기준=100)","증감률 (수익률%)"];
   document.getElementById('ymode-group').innerHTML=ym.map(m=>
@@ -626,8 +557,11 @@ function initDates(){
 async function boot(){
   // 햄버거
   const app=document.getElementById('app');
-  document.getElementById('hamburger').onclick=()=>app.classList.toggle('open');
-  document.getElementById('overlay').onclick=()=>app.classList.remove('open');
+  const togglePanel=(open)=>{app.classList.toggle('open',open);document.getElementById('hamburger').setAttribute('aria-expanded',String(open));};
+  document.getElementById('hamburger').onclick=()=>togglePanel(!app.classList.contains('open'));
+  document.getElementById('overlay').onclick=()=>togglePanel(false);
+  document.addEventListener('keydown',e=>{if(e.key==='Escape')togglePanel(false);});
+  document.getElementById('reset-view').onclick=()=>location.reload();
   try{
     const res=await fetch('data.json?ts='+Date.now());
     if(!res.ok) throw new Error('data.json 로드 실패 ('+res.status+')');
