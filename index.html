@@ -13,6 +13,21 @@
 @media(max-width:1100px){.content{padding:24px 20px}.hero{gap:22px}.hero-stat{padding-left:20px}.quote-value{font-size:34px}.data-badge{display:none}}
 @media(max-width:860px){.hamburger{display:block;position:fixed;top:15px;right:16px;z-index:1000;border:1px solid #dce5e8;background:#fff;border-radius:8px;padding:9px 12px;font-size:11px;box-shadow:0 2px 8px #192b3710}.sidebar{position:fixed;left:0;top:0;z-index:950;width:280px;transform:translateX(-100%);transition:transform .2s}.app.open .sidebar{transform:translateX(0)}.app.open .overlay{display:block;position:fixed;inset:0;background:#13283355;backdrop-filter:blur(3px);z-index:900}.content{padding:24px 14px}.topbar{margin-bottom:24px;padding-right:56px}.dash-title{font-size:23px}.dash-subtitle{font-size:11px}.hero{gap:18px;margin-bottom:22px}.hero-stat{padding-left:16px}.hero-stat:last-child{display:none}.quote-value{font-size:31px}.hero-stat strong{font-size:14px}.chart-toolbar{padding:14px;gap:14px}.chips{width:100%;justify-content:space-between}.chip{padding:6px 8px}.chart-panel{border-radius:12px}#chart-wrap{padding:0}#value-box{margin:8px 14px 0;gap:8px;font-size:10px}.chart-footer{padding:12px 14px}.eyebrow{font-size:9px}.src-note{padding:0 3px}}
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
+/* v1.1.0: 한 화면에 맞춘 차트와 촘촘한 설정 패널 */
+.content{height:100vh;height:100dvh;display:flex;flex-direction:column;padding:14px 20px 10px;max-width:none;overflow:hidden}
+.chart-panel{flex:1;min-height:0;display:flex;flex-direction:column;border-radius:12px}
+.chart-toolbar{flex-shrink:0;padding:10px 16px;gap:8px}.toolbar-title small{margin-top:3px}
+#chart-wrap{flex:1;min-height:0;display:flex;flex-direction:column;padding:0 8px}
+#value-box{flex-shrink:0;min-height:26px;margin:2px 10px 0;padding:4px 0;gap:12px;max-height:72px;overflow:auto}
+#plotly-div{flex:1;min-height:0;overflow:hidden}
+.chart-footer{flex-shrink:0;padding:7px 16px;font-size:10px}
+.src-note{flex-shrink:0;margin-top:5px;line-height:1.6}.src-note[open]{max-height:120px;overflow:auto}.src-note p{margin:6px 0}
+.sidebar{padding:16px 18px 14px}.brand{margin-bottom:14px;font-size:16px}.brand-mark{width:28px;height:28px}.brand small{letter-spacing:1px;font-size:9px;margin-top:2px}
+.sb-h{margin:12px 0 7px}.sb-sub{margin:6px 0 4px}.sb-div{margin:12px 0}.settings-details{margin-top:12px;padding-top:11px}.settings-details .sb-h{margin-top:10px}
+.date-row{display:grid;grid-template-columns:42px minmax(0,1fr);align-items:center;gap:6px;margin:5px 0}.date-row label{font-size:11px;color:var(--muted)}.date-row input{min-width:0;padding:5px 6px;height:30px}
+label.chk,label.rdo{padding:5px 0}.ind-item{padding:2px 8px;margin:1px -8px}.ind-opts{padding:2px 0 5px 22px}input[type=range]{margin:8px 0 2px}.reset-btn{margin-top:12px;padding:7px 10px}
+@media(max-width:860px){.content{padding:48px 8px 8px}.sidebar{padding:16px 18px}.hamburger{top:8px;right:10px;padding:7px 10px}.chart-toolbar{padding:8px 10px;gap:7px}.chips{padding:3px}.chip{padding:5px 7px}#chart-wrap{padding:0}#value-box{margin:2px 10px 0;padding:3px 0}.chart-footer{padding:6px 10px}.chart-footer>span:last-child{display:none}}
+@media(max-height:500px){.content{padding-top:8px}.chart-toolbar{padding-top:5px;padding-bottom:5px}.toolbar-title small{display:none}.src-note{display:none}}
 </style>
 </head>
 <body>
@@ -20,13 +35,11 @@
 <div class="app" id="app">
   <div class="overlay" id="overlay"></div>
   <aside class="sidebar" id="sidebar">
-    <div class="brand"><span class="brand-mark">∿</span><div>Macro Lens<small>MARKET OBSERVATORY</small></div></div>
-    <div class="settings-label">CHART SETTINGS</div>
+    <div class="brand"><span class="brand-mark">∿</span><div>Macro Lens<small>v1.1.0</small></div></div>
+    
     <div class="sb-h">날짜 범위</div>
-    <div class="sb-sub">시작일</div>
-    <input type="date" id="start-date">
-    <div class="sb-sub">종료일</div>
-    <input type="date" id="end-date">
+    <div class="date-row"><label for="start-date">시작일</label><input type="date" id="start-date"></div>
+    <div class="date-row"><label for="end-date">종료일</label><input type="date" id="end-date"></div>
 
     <details class="settings-details"><summary>축 · 차트 스타일</summary>
     <div class="sb-h">Y축 설정</div>
@@ -58,8 +71,6 @@
   </aside>
 
   <main class="content">
-    <header class="topbar"><div><div class="eyebrow">MARKET / MACRO OVERVIEW</div><h1 class="dash-title">시장의 흐름을 한눈에.</h1><div class="dash-subtitle">나스닥과 글로벌 매크로 지표의 움직임을 비교하세요.</div></div><div class="data-badge"><span class="updated" id="updated"></span></div></header>
-    <section class="hero" aria-label="선택 기간 나스닥 요약"><div><div class="quote-label">NASDAQ COMPOSITE <span id="quote-date"></span></div><div class="quote-value" id="quote-value">—</div><div class="quote-delta" id="quote-delta"></div></div><div class="hero-stat"><span>기간 최고 종가</span><strong id="period-high">—</strong></div><div class="hero-stat"><span>기간 최저 종가</span><strong id="period-low">—</strong></div><div class="hero-stat"><span>분석 기간</span><strong id="period-label">—</strong></div></section>
     <div id="status"></div>
     <section class="chart-panel" aria-label="매크로 비교 차트">
     <div class="chart-toolbar"><div class="toolbar-title">가격과 매크로 지표<small id="chart-caption">나스닥 · 로그 회귀 채널</small></div><div class="chips" id="period-chips"></div></div>
@@ -67,7 +78,7 @@
       <div id="value-box"></div>
       <div id="plotly-div" style="width:100%;"></div>
     </div>
-    <div class="chart-footer"><span id="range-note"></span><span>드래그로 확대 · 더블클릭으로 초기화</span></div></section>
+    <div class="chart-footer"><span id="range-note"></span><span class="updated" id="updated"></span><span>드래그로 확대 · 더블클릭으로 초기화</span></div></section>
     <details class="src-note"><summary>데이터 출처 및 계산 안내 ↗</summary><p>
       데이터 출처: Yahoo Finance (나스닥) · FRED (M2SL, FEDFUNDS, WALCL, ECBASSETSW, JPNASSETS, DEXUSEU, DEXJPUS, DGS10, DGS30) ·
       <a href="https://fred.stlouisfed.org" target="_blank">fred.stlouisfed.org</a><br>
@@ -194,6 +205,17 @@ function popStd(arr){
   let s=0; for(const a of arr) s+=(a-m)*(a-m); return Math.sqrt(s/n);
 }
 
+function chartHeight(){
+  const wrap=document.getElementById('chart-wrap');
+  const box=document.getElementById('value-box');
+  return Math.max(120, wrap.clientHeight - box.offsetHeight - 4);
+}
+function resizeChart(){
+  const plot=document.getElementById('plotly-div');
+  if(plot && plot.data && typeof Plotly!=='undefined'){
+    Plotly.relayout(plot,{height:chartHeight(),width:plot.clientWidth});
+  }
+}
 // ── 렌더 ──────────────────────────────────────────────────────────────────
 function render(){
   for(const id in S.style){ COLORS[id]=S.style[id].color; }
@@ -238,12 +260,6 @@ function render(){
   const ndc=nd.close;
   last.nasdaq=ndc[ndc.length-1];
   const chgNd=(ndc[ndc.length-1]/ndc[0]-1)*100;
-  document.getElementById('quote-value').innerHTML=fmt(last.nasdaq,2)+'<small>INDEX</small>';
-  document.getElementById('quote-date').textContent=' · '+nd.dates[nd.dates.length-1];
-  document.getElementById('quote-delta').innerHTML=deltaH(chgNd,'%')+' <span style="color:var(--muted);font-weight:400">선택 기간</span>';
-  document.getElementById('period-high').textContent=fmt(Math.max(...ndc),2);
-  document.getElementById('period-low').textContent=fmt(Math.min(...ndc),2);
-  document.getElementById('period-label').textContent=nd.dates[0].slice(0,7)+' — '+nd.dates[nd.dates.length-1].slice(0,7);
   document.getElementById('range-note').textContent=start+' — '+end+' · '+Object.values(S.show).filter(Boolean).length+'개 지표 선택';
   document.getElementById('chart-caption').textContent=S.ymode+(S.showReg&&S.show.nasdaq?' · '+(S.regLog?'로그':'선형')+' 회귀 ±'+S.stdMult.toFixed(1)+'σ':'');
   cards+=card("나스닥 (최근)", fmt(last.nasdaq,0), deltaH(chgNd,"%")+" (기간 내)");
@@ -361,8 +377,8 @@ function render(){
     plot_bgcolor:"#ffffff", paper_bgcolor:"#ffffff", font:{family:"Segoe UI, Malgun Gothic, sans-serif",color:"#71818b",size:11},
     legend:{ orientation:"h", yanchor:"bottom", y:1.01, xanchor:"left", x:0,
       font:{size:11,color:"#647782"}, bgcolor:"rgba(255,255,255,0)", borderwidth:0, itemclick:false, itemdoubleclick:false },
-    hovermode:"x", dragmode:"zoom", margin:{l:55,r:35,t:55,b:42},
-    height: window.innerWidth<=860 ? 440 : 560 };
+    hovermode:"x", dragmode:"zoom", margin:{l:55,r:35,t:40,b:36},
+    height: chartHeight() };
 
   if(S.ymode==="다중 Y축"){
     const used=new Set(Object.keys(activeAxis));
@@ -474,6 +490,7 @@ function render(){
   pd.on('plotly_unhover', function(){ box.innerHTML=staticHTML; clearDots(); });
 
   document.getElementById('updated').textContent="업데이트 "+todayStr();
+  requestAnimationFrame(resizeChart);
 }
 
 // ── UI 구성 ────────────────────────────────────────────────────────────────
@@ -580,7 +597,14 @@ async function boot(){
   }
   buildUI();
   render();
-  window.addEventListener('resize',()=>{ /* Plotly responsive 처리 */ });
+  let resizeFrame;
+  const scheduleResize=()=>{cancelAnimationFrame(resizeFrame);resizeFrame=requestAnimationFrame(resizeChart);};
+  window.addEventListener('resize',scheduleResize);
+  if(typeof ResizeObserver!=='undefined'){
+    const observer=new ResizeObserver(scheduleResize);
+    observer.observe(document.getElementById('chart-wrap'));
+    observer.observe(document.getElementById('value-box'));
+  }
 }
 boot();
 
