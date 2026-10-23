@@ -6,6 +6,8 @@ GitHub Actions에서 실행되어 원본 Streamlit 앱과 동일한 소스(Yahoo
 """
 import json, time, sys
 from datetime import date
+from pathlib import Path
+from financial_data import collect_financials
 import numpy as np
 import pandas as pd
 
@@ -107,6 +109,10 @@ def ser(idx, vals):
     }
 
 def main():
+    try:
+        previous = json.loads(Path("data.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        previous = {}
     nd = load_nasdaq()
     fr = load_fred()
     liq_actual = load_global_liquidity()
@@ -125,6 +131,8 @@ def main():
     data["dgs10"] = ser(fr["dgs10"].index, fr["dgs10"].values) if fr["dgs10"] is not None else None
     data["dgs30"] = ser(fr["dgs30"].index, fr["dgs30"].values) if fr["dgs30"] is not None else None
     data["liquidity_actual"]  = ser(liq_actual.index,  liq_actual.values)  if liq_actual  is not None else None
+
+    data["financials"] = collect_financials(previous.get("financials"))
 
     with open("data.json", "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, separators=(",", ":"))

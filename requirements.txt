@@ -2,3 +2,4 @@ yfinance
 pandas
 pandas_datareader
 numpy
+beautifulsoup4

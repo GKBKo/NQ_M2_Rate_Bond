@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Macro Lens — 나스닥 매크로 대시보드</title>
 <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
+<script src="settings.js"></script>
 <style>
 :root{--ink:#192b37;--muted:#7a8790;--accent:#167d8d;--border:#e5eaed;--bg:#f5f7f8}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:13px -apple-system,BlinkMacSystemFont,"Segoe UI","Malgun Gothic",sans-serif;-webkit-font-smoothing:antialiased}button,input,select{font:inherit}button,summary{cursor:pointer}button{color:inherit}button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:3px}button{transition:background .15s,color .15s}input{accent-color:var(--accent)}
@@ -13,7 +14,7 @@
 @media(max-width:1100px){.content{padding:24px 20px}.hero{gap:22px}.hero-stat{padding-left:20px}.quote-value{font-size:34px}.data-badge{display:none}}
 @media(max-width:860px){.hamburger{display:block;position:fixed;top:15px;right:16px;z-index:1000;border:1px solid #dce5e8;background:#fff;border-radius:8px;padding:9px 12px;font-size:11px;box-shadow:0 2px 8px #192b3710}.sidebar{position:fixed;left:0;top:0;z-index:950;width:280px;transform:translateX(-100%);transition:transform .2s}.app.open .sidebar{transform:translateX(0)}.app.open .overlay{display:block;position:fixed;inset:0;background:#13283355;backdrop-filter:blur(3px);z-index:900}.content{padding:24px 14px}.topbar{margin-bottom:24px;padding-right:56px}.dash-title{font-size:23px}.dash-subtitle{font-size:11px}.hero{gap:18px;margin-bottom:22px}.hero-stat{padding-left:16px}.hero-stat:last-child{display:none}.quote-value{font-size:31px}.hero-stat strong{font-size:14px}.chart-toolbar{padding:14px;gap:14px}.chips{width:100%;justify-content:space-between}.chip{padding:6px 8px}.chart-panel{border-radius:12px}#chart-wrap{padding:0}#value-box{margin:8px 14px 0;gap:8px;font-size:10px}.chart-footer{padding:12px 14px}.eyebrow{font-size:9px}.src-note{padding:0 3px}}
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
-/* v1.1.0: 한 화면에 맞춘 차트와 촘촘한 설정 패널 */
+/* v1.2.0: 한 화면에 맞춘 차트와 촘촘한 설정 패널 */
 .content{height:100vh;height:100dvh;display:flex;flex-direction:column;padding:14px 20px 10px;max-width:none;overflow:hidden}
 .chart-panel{flex:1;min-height:0;display:flex;flex-direction:column;border-radius:12px}
 .chart-toolbar{flex-shrink:0;padding:10px 16px;gap:8px}.toolbar-title small{margin-top:3px}
@@ -28,6 +29,14 @@
 label.chk,label.rdo{padding:5px 0}.ind-item{padding:2px 8px;margin:1px -8px}.ind-opts{padding:2px 0 5px 22px}input[type=range]{margin:8px 0 2px}.reset-btn{margin-top:12px;padding:7px 10px}
 @media(max-width:860px){.content{padding:48px 8px 8px}.sidebar{padding:16px 18px}.hamburger{top:8px;right:10px;padding:7px 10px}.chart-toolbar{padding:8px 10px;gap:7px}.chips{padding:3px}.chip{padding:5px 7px}#chart-wrap{padding:0}#value-box{margin:2px 10px 0;padding:3px 0}.chart-footer{padding:6px 10px}.chart-footer>span:last-child{display:none}}
 @media(max-height:500px){.content{padding-top:8px}.chart-toolbar{padding-top:5px;padding-bottom:5px}.toolbar-title small{display:none}.src-note{display:none}}
+/* Stable hover readout: cursor events never change plot dimensions. */
+#value-box{display:block;height:30px;min-height:30px;max-height:30px;white-space:nowrap;overflow-x:auto;overflow-y:hidden;scrollbar-width:thin;line-height:21px}
+#value-box>span,#value-box>b{margin-right:14px;display:inline-block}#value-box br{display:none}
+#plotly-div .draglayer rect:not(.nsewdrag){pointer-events:none!important;cursor:default!important}
+.info-btn{display:inline-flex;align-items:center;justify-content:center;border:1px solid #9aabb3;background:transparent;border-radius:50%;width:15px;height:15px;padding:0;font-size:10px;line-height:1;color:#617985;vertical-align:middle;margin-left:4px;flex-shrink:0;font-family:Georgia,serif;font-style:normal}
+.info-btn:hover,.info-btn:focus-visible{color:#126b7b;border-color:#126b7b;background:#edf5f6}
+.fin-index{margin-top:8px}.fin-index>summary{font-size:11px;color:#546b76;padding:5px 0}.fin-index .ind-item{margin-left:0;margin-right:0}.ind-heading{display:flex;align-items:center;gap:4px}.ind-heading>label{flex:1;min-width:0}.ind-item.unavailable label{color:#9aa7ae}.availability{font-size:9px;color:#89989f;margin-left:3px}.settings-actions{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px}.settings-actions button{font-size:11px;border:1px solid var(--border);border-radius:6px;padding:7px 3px;background:#f7fafb}.settings-actions button:hover{background:#eaf3f5}#save-status{font-size:10px;color:#788b96;min-height:15px;margin-top:6px}.help-actions{display:inline-flex!important;gap:4px}
+#info-dialog{border:1px solid #d9e3e8;border-radius:12px;padding:20px;max-width:480px;width:calc(100vw - 36px);color:var(--ink);box-shadow:0 20px 80px #152f3930}#info-dialog::backdrop{background:#122a3855}.dialog-head{display:flex;align-items:center;justify-content:space-between;gap:12px}.dialog-head button{border:0;background:transparent;font-size:23px;color:#72848e}#info-text{white-space:pre-line;font-size:12px;line-height:1.9}#info-link{font-size:12px;color:var(--accent)}
 </style>
 </head>
 <body>
@@ -35,9 +44,9 @@ label.chk,label.rdo{padding:5px 0}.ind-item{padding:2px 8px;margin:1px -8px}.ind
 <div class="app" id="app">
   <div class="overlay" id="overlay"></div>
   <aside class="sidebar" id="sidebar">
-    <div class="brand"><span class="brand-mark">∿</span><div>Macro Lens<small>v1.1.0</small></div></div>
+    <div class="brand"><span class="brand-mark">∿</span><div>Macro Lens<small>v1.2.0</small></div></div>
     
-    <div class="sb-h">날짜 범위</div>
+    <div class="sb-h">날짜 범위 <button type="button" class="info-btn" data-help="dates" aria-label="날짜 범위 설명">i</button></div>
     <div class="date-row"><label for="start-date">시작일</label><input type="date" id="start-date"></div>
     <div class="date-row"><label for="end-date">종료일</label><input type="date" id="end-date"></div>
 
@@ -50,10 +59,10 @@ label.chk,label.rdo{padding:5px 0}.ind-item{padding:2px 8px;margin:1px -8px}.ind
     <div id="ctype-group"></div></details>
 
     <hr class="sb-div">
-    <div class="sb-h">회귀 채널</div>
+    <div class="sb-h">회귀 채널 <button type="button" class="info-btn" data-help="regression" aria-label="회귀 채널 설명">i</button></div>
     <label class="chk"><input type="checkbox" id="show-reg" checked> 회귀 채널 표시</label>
     <div id="reg-opts">
-      <label class="chk"><input type="checkbox" id="reg-log" checked> 로그 회귀 (권장)</label>
+      <label class="chk"><input type="checkbox" id="reg-log" checked> 로그 회귀</label>
       <div class="sb-sub">표준편차 배수: <span class="slider-val" id="std-val">1.0</span></div>
       <input type="range" id="std-mult" min="0.5" max="4.0" step="0.1" value="1.0">
     </div>
@@ -61,13 +70,17 @@ label.chk,label.rdo{padding:5px 0}.ind-item{padding:2px 8px;margin:1px -8px}.ind
     <hr class="sb-div">
     <div class="sb-h">지표 표시</div>
     <div id="ind-group"></div>
+    <details class="settings-details" id="financial-section"><summary><span>재무지표 <button type="button" class="info-btn" data-help="financial" aria-label="재무지표 설명">i</button></span></summary><div id="financial-group"></div></details>
 
     <details class="settings-details" id="axis-section"><summary>지표별 축 배정</summary>
       <hr class="sb-div">
       <div class="sb-h">축 배정 (지표별 Y축)</div>
       <div id="axis-group"></div>
     </details>
-    <button class="reset-btn" id="reset-view">차트 기본 설정으로 복원</button>
+    <details class="settings-details" id="settings-menu"><summary><span>설정 저장 <button type="button" class="info-btn" data-help="settings" aria-label="설정 저장 설명">i</button></span></summary>
+      <div class="settings-actions"><button id="save-settings" type="button">지금 저장</button><button id="export-settings" type="button">파일 내보내기</button><button id="import-settings" type="button">파일 불러오기</button><button id="reset-view" type="button">기본값 복원</button></div>
+      <input type="file" id="settings-file" accept=".json,application/json" hidden>
+    </details><div id="save-status" role="status" aria-live="polite"></div>
   </aside>
 
   <main class="content">
@@ -78,16 +91,11 @@ label.chk,label.rdo{padding:5px 0}.ind-item{padding:2px 8px;margin:1px -8px}.ind
       <div id="value-box"></div>
       <div id="plotly-div" style="width:100%;"></div>
     </div>
-    <div class="chart-footer"><span id="range-note"></span><span class="updated" id="updated"></span><span>드래그로 확대 · 더블클릭으로 초기화</span></div></section>
-    <details class="src-note"><summary>데이터 출처 및 계산 안내 ↗</summary><p>
-      데이터 출처: Yahoo Finance (나스닥) · FRED (M2SL, FEDFUNDS, WALCL, ECBASSETSW, JPNASSETS, DEXUSEU, DEXJPUS, DGS10, DGS30) ·
-      <a href="https://fred.stlouisfed.org" target="_blank">fred.stlouisfed.org</a><br>
-      ※ '글로벌 유동성 프록시'는 Fed+ECB+BOJ 대차대조표(USD 환산) 합산 YoY%를 실제 관측 날짜에 표시한 근사치이며,
-      MacroMicro의 'Global Excess Liquidity Proxy'(GDP가중 M2·정책금리, PBOC 포함) 원 지표와 수치가 동일하지 않습니다.
-      </p></details>
+    <div class="chart-footer"><span id="range-note"></span><span class="updated" id="updated"></span><span class="help-actions"><button type="button" class="info-btn" data-help="chart" aria-label="차트 조작 설명">i</button><button type="button" class="info-btn" data-help="sources" aria-label="데이터 출처 설명">i</button></span></div></section>
   </main>
 </div>
 
+<dialog id="info-dialog"><div class="dialog-head"><strong id="info-title"></strong><button id="close-info" type="button" aria-label="설명 닫기">×</button></div><p id="info-text"></p><a id="info-link" target="_blank" rel="noopener noreferrer" hidden>데이터 출처 열기 ↗</a></dialog>
 <script>
 
 // ══════════════════════════════════════════════════════════════════════════
@@ -128,14 +136,22 @@ const INDICATORS = [
   {id:"dgs30",    label:"美 국채금리 30년물",                  axLabel:"30년물 축",        axDefault:6},
   {id:"spread",   label:"30Y−10Y 금리차",          axLabel:"금리차 축",        axDefault:7},
 ];
+const FIN_INDEXES=[['nasdaq','나스닥 종합'],['sp500','S&P 500'],['dow','다우 산업평균']];
+const FIN_METRICS=[['pe','PER · 연도별','배'],['eps','EPS · 연도별','지수 EPS'],['forward_pe','예상 PER','배'],['forward_eps','예상 EPS','지수 EPS']];
+const FIN_INDICATORS=FIN_INDEXES.flatMap(([index,name])=>FIN_METRICS.map(([metric,label,unit])=>({id:'fin_'+index+'_'+metric,index,metric,label:name+' '+label,shortLabel:label,unit,axLabel:name+' '+label+' 축',axDefault:metric.includes('eps')?5:4,financial:true})));
+FIN_INDICATORS.forEach(ind=>{INDICATORS.push(ind);DEF_STYLE[ind.id]={color:({nasdaq:'#8d6fba',sp500:'#bb7950',dow:'#5c799f'})[ind.index],width:1.6,dash:ind.metric.startsWith('forward')?'dot':'solid'};});
 const PERIODS = ["YTD","1Y","3Y","5Y","10Y","20Y","30Y","MAX"];
 
 let DATA = null;
 const S = { period:"10Y", start:null, end:null, ymode:"다중 Y축", ctype:"Line",
   showReg:true, regLog:true, stdMult:1.0,
   show:{nasdaq:true,m2:false,fed:false,liquidity:false,dgs10:false,dgs30:false,spread:false},
-  axis:{}, style:{} };
+  axis:{}, style:{}, dateMode:"rolling", view:{} };
 S.style = JSON.parse(JSON.stringify(DEF_STYLE));
+FIN_INDICATORS.forEach(ind=>S.show[ind.id]=false);
+INDICATORS.forEach(ind=>S.axis[ind.id]=AXIS_KEY_OF[AXIS_CHOICES[ind.axDefault]]);
+const DEFAULT_STATE=JSON.parse(JSON.stringify(S));
+
 
 // ── 유틸 ──────────────────────────────────────────────────────────────────
 function fmt(v, d){ if(v===null||v===undefined||isNaN(v)) return "—";
@@ -178,16 +194,13 @@ function normalize(ser, mode){
   if(!ser) return ser;
   const v=ser.values, n=v.length;
   if(mode==="지수화 (기준=100)"){
-    const base=v.find(x=>x!==null && !isNaN(x));
+    const base=v.find(x=>x!==null && Number.isFinite(x));
+    if(!Number.isFinite(base)||base===0)return {dates:ser.dates,values:v.map(()=>null)};
     return {dates:ser.dates, values:v.map(x=>(x===null||isNaN(x))?null:x/base*100)};
   }
   if(mode==="증감률 (수익률%)"){
-    const out=new Array(n).fill(null); let cum=0;
-    for(let i=1;i<n;i++){
-      if(v[i]!==null && v[i-1]!==null && v[i-1]!==0){
-        cum += (v[i]/v[i-1]-1)*100; out[i]=cum;
-      } else { out[i]=cum; }
-    }
+    const base=v.find(x=>x!==null && Number.isFinite(x));
+    const out=v.map(x=>Number.isFinite(x)&&Number.isFinite(base)&&base!==0?(x/base-1)*100:null);
     return {dates:ser.dates, values:out};
   }
   return ser;
@@ -212,12 +225,15 @@ function chartHeight(){
 }
 function resizeChart(){
   const plot=document.getElementById('plotly-div');
-  if(plot && plot.data && typeof Plotly!=='undefined'){
-    Plotly.relayout(plot,{height:chartHeight(),width:plot.clientWidth});
-  }
+  if(!plot || !plot.data || typeof Plotly==='undefined')return;
+  const height=Math.round(chartHeight()),width=Math.round(plot.clientWidth);
+  if(width>0 && (Math.abs((plot.layout.height||0)-height)>1 || Math.abs((plot.layout.width||0)-width)>1))
+    Plotly.relayout(plot,{height,width});
 }
 // ── 렌더 ──────────────────────────────────────────────────────────────────
-function render(){
+async function render(){
+  if(!MacroSettings.validDate(S.start)||!MacroSettings.validDate(S.end)||S.start>S.end){document.getElementById('status').textContent='시작일과 종료일을 확인해 주세요.';return;}
+  saveSettings();
   for(const id in S.style){ COLORS[id]=S.style[id].color; }
   const start=S.start, end=S.end;
   const useLog = !(S.ymode==="지수화 (기준=100)" || S.ymode==="증감률 (수익률%)");
@@ -279,15 +295,17 @@ function render(){
   // ── 트레이스 & 축 배정 ──
   const AX = S.ymode==="다중 Y축" ? S.axis
     : {nasdaq:"y",m2:"y",fed:"y",liquidity:"y",dgs10:"y",dgs30:"y",spread:"y"};
+  FIN_INDICATORS.forEach(ind=>{if(S.ymode!=="다중 Y축")AX[ind.id]='y';});
   const traces=[];
   const activeAxis={}; // axisKey -> [{label,color}]
   function reg(k,label,color){ (activeAxis[k]=activeAxis[k]||[]).push({label,color}); }
 
+  const candleValue=v=>S.ymode==='지수화 (기준=100)'?v/nd.close[0]*100:S.ymode==='증감률 (수익률%)'?(v/nd.close[0]-1)*100:v;
   // 나스닥
   if(S.show.nasdaq){
     const ax=AX.nasdaq;
     if(S.ctype==="Bar+Lines (봉차트)"){
-      traces.push({type:"candlestick", x:nd.dates, open:nd.open, high:nd.high, low:nd.low, close:nd.close,
+      traces.push({type:"candlestick", x:nd.dates, open:nd.open.map(candleValue), high:nd.high.map(candleValue), low:nd.low.map(candleValue), close:nd.close.map(candleValue),
         increasing:{line:{color:"#dc2626"}}, decreasing:{line:{color:"#167d8d"}},
         name:"나스닥 (봉차트)", yaxis:ax, showlegend:true});
     } else {
@@ -301,13 +319,14 @@ function render(){
       const xs=[],ys=[],dts=[];
       for(let i=0;i<nv.values.length;i++){ if(nv.values[i]!==null && !isNaN(nv.values[i])){ xs.push(xs.length); ys.push(nv.values[i]); dts.push(nv.dates[i]); } }
       if(xs.length>2){
-        const fy = S.regLog ? ys.map(Math.log) : ys.slice();
+        const logFit=S.regLog && ys.every(v=>v>0);
+        const fy = logFit ? ys.map(Math.log) : ys.slice();
         const [sl,ic]=polyfit1(xs,fy);
         const ctr=xs.map(x=>sl*x+ic);
         const resid=fy.map((v,i)=>v-ctr[i]);
         const std=popStd(resid);
         let cV,uV,lV;
-        if(S.regLog){ cV=ctr.map(Math.exp); uV=ctr.map(c=>Math.exp(c+S.stdMult*std)); lV=ctr.map(c=>Math.exp(c-S.stdMult*std)); }
+        if(logFit){ cV=ctr.map(Math.exp); uV=ctr.map(c=>Math.exp(c+S.stdMult*std)); lV=ctr.map(c=>Math.exp(c-S.stdMult*std)); }
         else { cV=ctr.slice(); uV=ctr.map(c=>c+S.stdMult*std); lV=ctr.map(c=>c-S.stdMult*std); }
         traces.push({type:"scatter",mode:"lines",x:dts,y:cV,name:"중심 회귀선",line:{color:"#9a8461",width:1.4,dash:"dash"},yaxis:ax});
         traces.push({type:"scatter",mode:"lines",x:dts,y:uV,name:`상단 채널 (+${S.stdMult.toFixed(1)}σ)`,line:{color:"rgba(154,132,97,0.52)",width:1,dash:"dot"},yaxis:ax});
@@ -351,6 +370,17 @@ function render(){
     const v=normalize(spread,S.ymode);
     traces.push({type:"scatter",mode:"lines",x:v.dates,y:v.values,name:"30Y-10Y 금리차 (%p)",line:lineOf('spread'),yaxis:AX.spread});
     reg(AX.spread,"30Y−10Y금리차",COLORS.spread);
+  }
+
+  for(const ind of FIN_INDICATORS){
+    if(!S.show[ind.id])continue;
+    const raw=DATA.financials?.[ind.index+'_'+ind.metric];
+    const series=filt(raw,start,end);
+    if(!series?.dates.length)continue;
+    const v=normalize(series,S.ymode);
+    traces.push({type:'scatter',mode:'lines+markers',x:v.dates,y:v.values,name:ind.label,
+      line:lineOf(ind.id),marker:{size:5,color:S.style[ind.id].color},yaxis:AX[ind.id],connectgaps:false});
+    reg(AX[ind.id],ind.label+' ('+ind.unit+')',S.style[ind.id].color);
   }
 
   // ── Y축 레이아웃 ──
@@ -409,17 +439,19 @@ function render(){
     layout.xaxis.domain=[0,1];
   }
 
-  // ── 호버 dot(교차점 표시)용 마커 트레이스: 사용 중인 Y축마다 1개 ──
-  const usedAxes = Object.keys(activeAxis);
-  const dotTraceIndex = {};
-  usedAxes.forEach(function(k){
-    dotTraceIndex[k] = traces.length;
-    traces.push({ type:"scatter", mode:"markers", x:[], y:[], yaxis:k,
-      marker:{ size:9, color:[], line:{color:"#ffffff", width:1.6} },
-      meta:"hoverdot", hoverinfo:"skip", showlegend:false, cliponaxis:false });
-  });
-
-  Plotly.react('plotly-div', traces, layout, {responsive:true, displaylogo:false, displayModeBar:"hover", modeBarButtonsToRemove:["select2d","lasso2d","autoScale2d"], toImageButtonOptions:{filename:"Macro_Lens",scale:2}});
+  layout.xaxis.autorange=true;
+  for(const name of Object.values(AXIS_NAME_OF))if(layout[name])layout[name].autorange=true;
+  layout.uirevision='view-'+S.start+'-'+S.end+'-'+S.ymode;
+  if(S.view?.x){layout.xaxis.range=S.view.x.slice();layout.xaxis.autorange=false;}
+  for(const key of Object.keys(S.view||{})){
+    if(key==='x')continue;
+    const axis=layout[AXIS_NAME_OF[key]];
+    if(axis){axis.range=S.view[key].slice();axis.autorange=false;}
+  }
+  const plotNode=document.getElementById('plotly-div');
+  if(plotNode.removeAllListeners)plotNode.removeAllListeners('plotly_relayout');
+  await Plotly.react('plotly-div', traces, layout, {responsive:false, scrollZoom:false, displaylogo:false,
+    displayModeBar:false, doubleClick:'reset', toImageButtonOptions:{filename:'Macro_Lens',scale:2}});
 
   // ── 값 박스 ──
   const dateLabel = nd.dates[nd.dates.length-1];
@@ -432,6 +464,10 @@ function render(){
   bx(S.show.dgs10&&d10&&d10.values.length, COLORS.dgs10,"美10Y", fmt(last.dgs10,2)+"%");
   bx(S.show.dgs30&&d30&&d30.values.length, COLORS.dgs30,"美30Y", fmt(last.dgs30,2)+"%");
   bx(S.show.spread&&spread&&spread.values.length, COLORS.spread,"30Y-10Y금리차", fmt(last.spread,2)+"%p");
+  for(const ind of FIN_INDICATORS){
+    const entry=filt(DATA.financials?.[ind.index+'_'+ind.metric],start,end);
+    if(S.show[ind.id]&&entry?.dates.length)bx(true,S.style[ind.id].color,ind.label+' ['+entry.dates.at(-1)+']',fmt(entry.values.at(-1),2));
+  }
   const staticHTML = bl.length ? (`<b>${dateLabel} 기준</b><br>`+bl.join("<br>")) : "";
   const box=document.getElementById('value-box'); box.innerHTML=staticHTML;
 
@@ -439,55 +475,25 @@ function render(){
   pd.removeAllListeners && pd.removeAllListeners('plotly_hover');
   pd.removeAllListeners && pd.removeAllListeners('plotly_unhover');
 
-  // 회귀선/채널·호버dot 트레이스는 dot 대상에서 제외
-  function isIndicatorPt(p){
-    const nm=p.data.name||"";
-    if(p.data.meta==="hoverdot") return false;
-    if(nm.indexOf("회귀")>=0 || nm.indexOf("채널")>=0) return false;
-    return true;
-  }
-  // 언호버 시 dot 비우기
-  function clearDots(){
-    const idxs=usedAxes.map(k=>dotTraceIndex[k]);
-    if(!idxs.length) return;
-    const empt=idxs.map(()=>[]);
-    Plotly.restyle('plotly-div', {x:empt.map(()=>[]), y:empt.map(()=>[]), 'marker.color':empt.map(()=>[])}, idxs);
-  }
-
-  pd.on('plotly_hover', function(evt){
-    const pts=evt.points; if(!pts||!pts.length) return;
-    const xL=pts[0].x;
-
-    // 값 박스 갱신 (지표만)
-    const lines=pts.filter(p=>isIndicatorPt(p) && p.data.name)
-      .map(p=>{ const c=(p.data.line&&p.data.line.color)?p.data.line.color:"#334155";
-        const yv=(p.y!==undefined&&p.y!==null)?p.y:p.close;
-        return `<span><span style="color:${c}">●</span> ${p.data.name}: ${(typeof yv==='number')?yv.toLocaleString(undefined,{maximumFractionDigits:2}):yv}</span>`; })
-      .join("<br>");
-    if(lines) box.innerHTML=`<b>${xL} 기준</b><br>`+lines;
-
-    // 세로 점선과 각 지표선의 교차점에 지표색 dot 표시 (Y축별 그룹)
-    const perX={}, perY={}, perC={};
-    pts.forEach(function(p){
-      if(!isIndicatorPt(p)) return;
-      const yv=(p.y!==undefined&&p.y!==null)?p.y:p.close;
-      if(yv===undefined||yv===null||(typeof yv==='number'&&isNaN(yv))) return;
-      const ax=p.data.yaxis||"y";
-      if(dotTraceIndex[ax]===undefined) return;
-      const col=(p.data.line&&p.data.line.color)?p.data.line.color
-               :((p.data.name&&p.data.name.indexOf("나스닥")>=0)?COLORS.nasdaq:"#334155");
-      (perX[ax]=perX[ax]||[]).push(p.x);
-      (perY[ax]=perY[ax]||[]).push(yv);
-      (perC[ax]=perC[ax]||[]).push(col);
-    });
-    const idxs=[], xu=[], yu=[], cu=[];
-    usedAxes.forEach(function(k){
-      idxs.push(dotTraceIndex[k]);
-      xu.push(perX[k]||[]); yu.push(perY[k]||[]); cu.push(perC[k]||[]);
-    });
-    if(idxs.length) Plotly.restyle('plotly-div', {x:xu, y:yu, 'marker.color':cu}, idxs);
+  pd.removeAllListeners && pd.removeAllListeners('plotly_relayout');
+  // Only update a fixed-height text strip. Never restyle traces or resize on hover.
+  pd.on('plotly_hover',function(evt){
+    const pts=(evt.points||[]).filter(p=>p.data.name&&!/회귀|채널/.test(p.data.name));
+    if(!pts.length)return;
+    const lines=pts.map(p=>{const v=Number.isFinite(p.y)?p.y:p.close;return '<span>'+escapeHTML(p.data.name)+': '+fmt(v,2)+'</span>';});
+    box.innerHTML='<b>'+escapeHTML(String(pts[0].x))+'</b>'+lines.join('');
   });
-  pd.on('plotly_unhover', function(){ box.innerHTML=staticHTML; clearDots(); });
+  pd.on('plotly_unhover',()=>{box.innerHTML=staticHTML;});
+  pd.on('plotly_relayout',event=>{
+    let changed=false;
+    for(const [key,name] of [['x','xaxis'],...Object.entries(AXIS_NAME_OF)]){
+      if(event[name+'.autorange']===true){delete S.view[key];changed=true;}
+      const a=event[name+'.range[0]'],b=event[name+'.range[1]'];
+      const range=event[name+'.range']||(a!==undefined&&b!==undefined?[a,b]:null);
+      if(range){S.view[key]=range;changed=true;}
+    }
+    if(changed)saveSettings();
+  });
 
   document.getElementById('updated').textContent="업데이트 "+todayStr();
   requestAnimationFrame(resizeChart);
@@ -495,11 +501,16 @@ function render(){
 
 // ── UI 구성 ────────────────────────────────────────────────────────────────
 function buildUI(){
+  document.getElementById('show-reg').checked=S.showReg;
+  document.getElementById('reg-log').checked=S.regLog;
+  document.getElementById('std-mult').value=S.stdMult;
+  document.getElementById('std-val').textContent=S.stdMult.toFixed(1);
+  document.getElementById('reg-opts').style.display=S.showReg?'block':'none';
   // 기간 칩
   const pc=document.getElementById('period-chips');
   pc.innerHTML=PERIODS.map(p=>`<button type="button" class="chip${p===S.period?' active':''}" data-p="${p}">${p}</button>`).join("");
   pc.querySelectorAll('.chip').forEach(el=>el.onclick=()=>{
-    S.period=el.dataset.p;
+    S.period=el.dataset.p; S.dateMode="rolling";S.end=latestDate();S.view={};document.getElementById('end-date').value=S.end;
     pc.querySelectorAll('.chip').forEach(c=>c.classList.toggle('active',c.dataset.p===S.period));
     S.start=periodStart(S.period,S.end);
     document.getElementById('start-date').value=S.start;
@@ -508,14 +519,14 @@ function buildUI(){
   // 날짜
   document.getElementById('start-date').value=S.start;
   document.getElementById('end-date').value=S.end;
-  document.getElementById('start-date').onchange=e=>{ S.start=e.target.value; S.period=null; document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active')); render(); };
-  document.getElementById('end-date').onchange=e=>{ S.end=e.target.value; S.period=null; document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active')); render(); };
+  document.getElementById('start-date').onchange=e=>{ S.start=e.target.value; S.period=null; S.dateMode="fixed";S.view={};document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active')); render(); };
+  document.getElementById('end-date').onchange=e=>{ S.end=e.target.value; S.period=null; S.dateMode="fixed";S.view={};document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active')); render(); };
   // Y축 모드
   const ym=["다중 Y축","동일 Y축","지수화 (기준=100)","증감률 (수익률%)"];
   document.getElementById('ymode-group').innerHTML=ym.map(m=>
     `<label class="rdo"><input type="radio" name="ym" value="${m}"${m===S.ymode?' checked':''}> ${m}</label>`).join("");
   document.querySelectorAll('input[name=ym]').forEach(el=>el.onchange=()=>{
-    S.ymode=el.value; document.getElementById('axis-section').style.display=(S.ymode==="다중 Y축")?"block":"none"; render(); });
+    S.ymode=el.value;S.view={}; document.getElementById('axis-section').style.display=(S.ymode==="다중 Y축")?"block":"none"; render(); });
   // 차트 타입
   const ct=["Line","Bar+Lines (봉차트)"];
   document.getElementById('ctype-group').innerHTML=ct.map(c=>
@@ -530,23 +541,18 @@ function buildUI(){
   // 지표 + 스타일 옵션 (색상 / 굵기 / 선종류)
   const DASHES=["solid","dot","dash","dashdot","longdash","longdashdot"];
   const DASH_LB={solid:"실선",dot:"점선",dash:"파선",dashdot:"일점쇄선",longdash:"긴파선",longdashdot:"긴일점쇄선"};
-  document.getElementById('ind-group').innerHTML=INDICATORS.map(ind=>{
-    const st=S.style[ind.id];
-    return `<div class="ind-item">`+
-      `<label class="chk"><input type="checkbox" data-ind="${ind.id}"${S.show[ind.id]?' checked':''}> ${ind.label}</label>`+
-      `<div class="ind-opts">`+
-        `<input type="color" data-sc="${ind.id}" value="${st.color}" title="색상">`+
-        `<input type="number" data-sw="${ind.id}" value="${st.width}" min="0.5" max="6" step="0.1" title="선 굵기">`+
-        `<select data-sd="${ind.id}" title="선 종류">`+
-          DASHES.map(d=>`<option value="${d}"${d===st.dash?' selected':''}>${DASH_LB[d]}</option>`).join("")+
-        `</select>`+
-      `</div>`+
-    `</div>`;
-  }).join("");
+  const indicatorHTML=ind=>{
+    const st=S.style[ind.id],entry=ind.financial?DATA.financials?.[ind.index+'_'+ind.metric]:null;
+    const unavailable=ind.financial&&!entry?.dates?.length;
+    const help=ind.financial?'<button type="button" class="info-btn" data-fin-help="'+ind.id+'" aria-label="'+ind.label+' 설명" title="'+ind.label+' 설명">i</button>':ind.id==='liquidity'?'<button type="button" class="info-btn" data-help="liquidity" aria-label="유동성 설명">i</button>':'';
+    return `<div class="ind-item${unavailable?' unavailable':''}"><div class="ind-heading"><label class="chk"><input type="checkbox" data-ind="${ind.id}"${S.show[ind.id]?' checked':''}${unavailable?' disabled':''}> ${ind.shortLabel||ind.label}${unavailable?'<span class="availability">미제공</span>':''}</label>${help}</div><div class="ind-opts"><input type="color" data-sc="${ind.id}" value="${st.color}" title="색상"><input type="number" data-sw="${ind.id}" value="${st.width}" min="0.5" max="6" step="0.1" title="선 굵기"><select data-sd="${ind.id}" title="선 종류">${DASHES.map(d=>`<option value="${d}"${d===st.dash?' selected':''}>${DASH_LB[d]}</option>`).join('')}</select></div></div>`;
+  };
+  document.getElementById('ind-group').innerHTML=INDICATORS.filter(ind=>!ind.financial).map(indicatorHTML).join('');
+  document.getElementById('financial-group').innerHTML=FIN_INDEXES.map(([id,label])=>'<details class="fin-index"'+(FIN_INDICATORS.some(ind=>ind.index===id&&S.show[ind.id])?' open':'')+'><summary>'+label+'</summary>'+FIN_INDICATORS.filter(ind=>ind.index===id).map(indicatorHTML).join('')+'</details>').join('');
   document.querySelectorAll('input[data-ind]').forEach(el=>el.onchange=()=>{
     S.show[el.dataset.ind]=el.checked; buildAxisSelectors(); render(); });
   document.querySelectorAll('input[data-sc]').forEach(el=>el.oninput=()=>{ S.style[el.dataset.sc].color=el.value; render(); });
-  document.querySelectorAll('input[data-sw]').forEach(el=>el.onchange=()=>{ const w=parseFloat(el.value); if(!isNaN(w)&&w>0){ S.style[el.dataset.sw].width=w; render(); } });
+  document.querySelectorAll('input[data-sw]').forEach(el=>el.onchange=()=>{ const w=parseFloat(el.value); if(Number.isFinite(w)&&w>=.5&&w<=6){ S.style[el.dataset.sw].width=w; render(); } });
   document.querySelectorAll('select[data-sd]').forEach(el=>el.onchange=()=>{ S.style[el.dataset.sd].dash=el.value; render(); });
   // 축 배정
   buildAxisSelectors();
@@ -563,7 +569,79 @@ function buildAxisSelectors(){
       AXIS_CHOICES.map(c=>`<option value="${AXIS_KEY_OF[c]}"${AXIS_KEY_OF[c]===cur?' selected':''}>${c}</option>`).join("")+`</select>`;
   });
   g.innerHTML=html;
-  g.querySelectorAll('select[data-ax]').forEach(el=>el.onchange=()=>{ S.axis[el.dataset.ax]=el.value; render(); });
+  g.querySelectorAll('select[data-ax]').forEach(el=>el.onchange=()=>{ S.axis[el.dataset.ax]=el.value;S.view={}; render(); });
+}
+
+function escapeHTML(value){return String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function latestDate(){return DATA.nasdaq.dates.at(-1)||todayStr();}
+function freshState(){const result=JSON.parse(JSON.stringify(DEFAULT_STATE));result.end=latestDate();result.start=periodStart(result.period,result.end);return result;}
+function statusText(text){document.getElementById('save-status').textContent=text;}
+function saveSettings(manual=false){
+  if(!MacroSettings.validDate(S.start)||!MacroSettings.validDate(S.end)||S.start>S.end)return false;
+  try{localStorage.setItem(MacroSettings.KEY,JSON.stringify(MacroSettings.encode(S)));statusText(manual?'설정을 저장했습니다':'마지막 설정 자동 저장됨');return true;}
+  catch(error){statusText('브라우저 저장 불가 · 파일로 내보내세요');return false;}
+}
+function applySettings(state){
+  Object.assign(S,state);
+  if(S.dateMode==='rolling'){const end=latestDate();if(end!==S.end)S.view={};S.end=end;S.start=periodStart(S.period,end);}
+}
+function restoreSettings(){
+  try{const raw=localStorage.getItem(MacroSettings.KEY);if(raw)applySettings(MacroSettings.decode(JSON.parse(raw),freshState()));}
+  catch(error){statusText('저장 설정을 읽지 못해 기본값을 사용합니다');}
+}
+function bindSettings(){
+  document.getElementById('save-settings').onclick=()=>saveSettings(true);
+  document.getElementById('export-settings').onclick=()=>{
+    try{
+      const payload=MacroSettings.encode(S);MacroSettings.decode(payload,freshState());
+      const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob);
+      const a=document.createElement('a');a.href=url;a.download='Macro_Lens_settings_'+new Date().toISOString().slice(0,10)+'.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);statusText('설정 파일을 내보냈습니다');
+    }catch(error){statusText('유효한 날짜 범위를 선택한 후 내보내세요');}
+  };
+  const input=document.getElementById('settings-file');
+  document.getElementById('import-settings').onclick=()=>input.click();
+  input.onchange=async()=>{
+    const file=input.files[0];if(!file)return;
+    try{
+      if(file.size>262144)throw new Error('설정 파일이 너무 큽니다 (최대 256KB).');
+      const parsed=JSON.parse(await file.text());
+      const state=MacroSettings.decode(parsed,freshState()); // validate entirely before mutating
+      applySettings(state);buildUI();await render();saveSettings();statusText('설정 파일을 적용했습니다');
+    }catch(error){statusText('불러오기 실패: '+error.message);}
+    finally{input.value='';}
+  };
+  document.getElementById('reset-view').onclick=async()=>{applySettings(freshState());buildUI();await render();saveSettings(true);};
+  window.addEventListener('pagehide',()=>saveSettings());
+  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')saveSettings();});
+}
+const HELP={
+  dates:['날짜 범위','기간 버튼(1Y·10Y 등)은 최신 데이터 날짜를 기준으로 매번 같은 기간을 유지합니다. 날짜를 직접 입력하면 해당 시작일·종료일을 그대로 저장합니다. 확대·축 이동으로 변경한 보기 범위도 저장됩니다.'],
+  settings:['설정 저장','기간, 차트 형태, 색상, 굵기, 선 종류, 지표 선택, 축 배정, 회귀 채널과 확대 범위를 자동 저장합니다. 다음 접속 때 같은 브라우저·사이트에서 복원합니다.\n\n파일 내보내기는 JSON 설정 파일을 다운로드합니다. 다른 폴더·PC·브라우저에서도 파일 불러오기로 복원할 수 있습니다. 이 파일에는 시세 데이터와 파일 경로가 포함되지 않습니다. 브라우저 데이터 삭제 또는 시크릿 모드 종료 시 자동 저장본은 사라질 수 있습니다.'],
+  regression:['회귀 채널','선택 기간의 나스닥 종가에 회귀선을 맞추고 잔차 표준편차의 배수로 상·하단을 표시합니다. 로그 회귀는 양수 값에 적용합니다. 0 또는 음수가 포함된 수익률 모드는 선형 회귀로 처리합니다. 채널은 미래 가격 예측 또는 신뢰구간이 아닙니다.'],
+  chart:['차트 조작','차트 안쪽에서 드래그하면 확대하고, 더블클릭하면 표시 범위를 초기화합니다. 좌우 축과 가장자리의 드래그 핸들은 비활성화했습니다. 커서 이동은 위쪽 값 표시줄만 갱신하며 축 범위나 차트 크기를 변경하지 않습니다.'],
+  liquidity:['글로벌 유동성','Fed·ECB·BOJ 자산을 달러로 환산해 합산한 전년 대비 변화율입니다. 실제 관측 날짜에 표시하며 시간 시프트는 없습니다. MacroMicro의 Global Excess Liquidity 원 지표와 다른 근사치입니다.'],
+  financial:['재무지표','PER·EPS·예상 PER·예상 EPS를 지수별로 구분합니다.\n\nS&P 500의 연도별 자료는 매년 1월 1일에 관측한 TTM 값으로, 연평균이나 해당 연도 결산 EPS가 아닙니다. EPS는 명목값입니다.\n\n나스닥은 나스닥 종합(^IXIC), 다우는 다우 산업평균(^DJI)입니다. Nasdaq-100·ETF·거래소 운영회사(NDAQ) 수치로 바꾸지 않습니다. 검증된 값이 없으면 미제공으로 표시합니다. 예상치는 과거 자료를 임의로 소급 생성하지 않습니다. 관측일·출처·기준은 각 항목의 ⓘ에서 확인하세요.'],
+  sources:['데이터 출처','가격: Yahoo Finance / 보조 Stooq. 경제지표: FRED M2SL·FEDFUNDS·DGS10·DGS30·WALCL·ECBASSETSW·JPNASSETS·DEXUSEU·DEXJPUS.\n\n재무: Multpl 및 OfficialData의 S&P/Shiller 재게시 자료, 제공되는 경우 Yahoo Finance의 지수 재무 값. 최신 수집 날짜와 실제 지표 관측일은 다를 수 있습니다. 각 재무지표의 ⓘ에 출처와 날짜를 표시합니다.\n\n지수화는 시작값=100, 수익률은 시작 대비 증감률입니다. 금리·금리차의 증감률은 채권 투자수익률이 아닙니다.']
+};
+function bindHelp(){
+  document.querySelectorAll('.info-btn').forEach(button=>button.title=button.getAttribute('aria-label')||'설명');
+  const dialog=document.getElementById('info-dialog');
+  document.getElementById('close-info').onclick=()=>dialog.close();
+  dialog.addEventListener('click',event=>{if(event.target===dialog){const r=dialog.getBoundingClientRect();if(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom)dialog.close();}});
+  document.addEventListener('click',event=>{
+    const button=event.target.closest('[data-help],[data-fin-help]');if(!button)return;
+    event.preventDefault();event.stopPropagation();
+    let title,text,url='';
+    if(button.dataset.finHelp){
+      const ind=FIN_INDICATORS.find(x=>x.id===button.dataset.finHelp);if(!ind)return;
+      const entry=DATA?.financials?.[ind.index+'_'+ind.metric];title=ind.label;
+      text=entry?.dates?.length?`${entry.basis||''}\n\n관측 범위: ${entry.dates[0]} — ${entry.dates.at(-1)} (${entry.dates.length}개)\n마지막 값: ${fmt(entry.values.at(-1),2)} ${ind.unit}\n수집 시각: ${entry.retrieved_at||'미확인'}\n출처: ${entry.source||'미확인'}\n상태: ${entry.status==='stale'?'갱신 실패 · 이전 자료': '수집됨'}${entry.reason?'\n'+entry.reason:''}`:(entry?.reason||'검증된 공개 데이터가 없습니다.');
+      url=entry?.source_url||'';
+    }else{[title,text]=HELP[button.dataset.help]||['설명',''];}
+    document.getElementById('info-title').textContent=title;document.getElementById('info-text').textContent=text;
+    const link=document.getElementById('info-link');link.hidden=!/^https?:\/\//.test(url);if(!link.hidden)link.href=url;
+    dialog.showModal();
+  });
 }
 
 // ── 초기화 ────────────────────────────────────────────────────────────────
@@ -578,7 +656,8 @@ async function boot(){
   document.getElementById('hamburger').onclick=()=>togglePanel(!app.classList.contains('open'));
   document.getElementById('overlay').onclick=()=>togglePanel(false);
   document.addEventListener('keydown',e=>{if(e.key==='Escape')togglePanel(false);});
-  document.getElementById('reset-view').onclick=()=>location.reload();
+  bindSettings();
+  bindHelp();
   try{
     const res=await fetch('data.json?ts='+Date.now());
     if(!res.ok) throw new Error('data.json 로드 실패 ('+res.status+')');
@@ -595,18 +674,19 @@ async function boot(){
     if(lastD<S.end) S.end=lastD;
     S.start=periodStart(S.period,S.end);
   }
+  restoreSettings();
   buildUI();
-  render();
+  await render();
   let resizeFrame;
   const scheduleResize=()=>{cancelAnimationFrame(resizeFrame);resizeFrame=requestAnimationFrame(resizeChart);};
   window.addEventListener('resize',scheduleResize);
   if(typeof ResizeObserver!=='undefined'){
     const observer=new ResizeObserver(scheduleResize);
     observer.observe(document.getElementById('chart-wrap'));
-    observer.observe(document.getElementById('value-box'));
+
   }
 }
-boot();
+boot().catch(error=>{document.getElementById('status').textContent='차트 실행 오류: '+error.message;});
 
 </script>
 </body>
