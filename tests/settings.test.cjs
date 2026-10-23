@@ -19,6 +19,11 @@ const run=s=>vm.runInContext(s,box);
  plot.handlers.plotly_relayout({'xaxis.range[0]':'2022-01-01','xaxis.range[1]':'2023-01-01'});assert.equal(JSON.parse(storage.get(codec.KEY)).state.view.x[0],'2022-01-01');
  assert.equal(run("normalize({dates:['a','b','c'],values:[100,110,100]},'증감률 (수익률%)').values[2]"),0);
  assert.deepEqual(JSON.parse(run("JSON.stringify(normalize({dates:['a','b'],values:[0,1]},'지수화 (기준=100)').values)")),[null,null]);
- run("S.ymode='증감률 (수익률%)';S.view={};");await run('render()');assert(box.result.traces.filter(t=>/회귀|채널/.test(t.name)).every(t=>t.y.every(Number.isFinite)));
+ run("S.ymode='증감률 (수익률%)';S.log.nasdaq=false;S.view={};");await run('render()');assert(box.result.traces.filter(t=>/회귀|채널/.test(t.name)).every(t=>t.y.every(Number.isFinite)));
+ const stockState=structuredClone(defaults);stockState.stocks=[{symbol:'AAPL',name:'Apple Inc.'}];stockState.show.stock_AAPL=true;stockState.axis.stock_AAPL='y3';stockState.style.stock_AAPL={color:'#123456',width:2,dash:'dot'};stockState.log.stock_AAPL=true;
+ assert.deepEqual(codec.decode(codec.encode(stockState),defaults),stockState);
+ for(const st of [[{symbol:'AAPL<script>',name:'bad'}],[{symbol:'AAPL',name:'Apple'},{symbol:'AAPL',name:'duplicate'}]]){const bad=structuredClone(stockState);bad.stocks=st;assert.throws(()=>codec.decode(codec.encode(bad),defaults));}
+ run("Object.assign(S,freshState());S.show.m2=true;S.axis.m2='y';S.log.m2=false;S.log.nasdaq=true;");await run('render()');
+ const ndTrace=box.result.traces.find(t=>t.name==='나스닥'),m2Trace=box.result.traces.find(t=>t.name==='M2 (십억달러)');assert.notEqual(ndTrace.yaxis,m2Trace.yaxis);assert.equal(box.result.layout.yaxis.type,'log');assert.equal(box.result.layout['yaxis'+m2Trace.yaxis.slice(1)].type,'linear');
  console.log('PASS: defaults, portable roundtrip, invalid files, restore, financial traces, hover stability, zoom persistence, transforms');
 })().catch(e=>{console.error(e);process.exit(1)});
