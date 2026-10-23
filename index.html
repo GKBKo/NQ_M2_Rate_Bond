@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Macro Lens — 나스닥 매크로 대시보드</title>
 <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
-<script src="settings.js"></script>
-<script src="stocks.js"></script>
+<script src="settings.js?v=1.3.1"></script>
+<script src="stocks.js?v=1.3.1"></script>
 <style>
 :root{--ink:#192b37;--muted:#7a8790;--accent:#167d8d;--border:#e5eaed;--bg:#f5f7f8}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:13px -apple-system,BlinkMacSystemFont,"Segoe UI","Malgun Gothic",sans-serif;-webkit-font-smoothing:antialiased}button,input,select{font:inherit}button,summary{cursor:pointer}button{color:inherit}button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:3px}button{transition:background .15s,color .15s}input{accent-color:var(--accent)}
@@ -15,7 +15,7 @@
 @media(max-width:1100px){.content{padding:24px 20px}.hero{gap:22px}.hero-stat{padding-left:20px}.quote-value{font-size:34px}.data-badge{display:none}}
 @media(max-width:860px){.hamburger{display:block;position:fixed;top:15px;right:16px;z-index:1000;border:1px solid #dce5e8;background:#fff;border-radius:8px;padding:9px 12px;font-size:11px;box-shadow:0 2px 8px #192b3710}.sidebar{position:fixed;left:0;top:0;z-index:950;width:280px;transform:translateX(-100%);transition:transform .2s}.app.open .sidebar{transform:translateX(0)}.app.open .overlay{display:block;position:fixed;inset:0;background:#13283355;backdrop-filter:blur(3px);z-index:900}.content{padding:24px 14px}.topbar{margin-bottom:24px;padding-right:56px}.dash-title{font-size:23px}.dash-subtitle{font-size:11px}.hero{gap:18px;margin-bottom:22px}.hero-stat{padding-left:16px}.hero-stat:last-child{display:none}.quote-value{font-size:31px}.hero-stat strong{font-size:14px}.chart-toolbar{padding:14px;gap:14px}.chips{width:100%;justify-content:space-between}.chip{padding:6px 8px}.chart-panel{border-radius:12px}#chart-wrap{padding:0}#value-box{margin:8px 14px 0;gap:8px;font-size:10px}.chart-footer{padding:12px 14px}.eyebrow{font-size:9px}.src-note{padding:0 3px}}
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
-/* v1.3.0: 한 화면에 맞춘 차트와 촘촘한 설정 패널 */
+/* v1.3.1: 한 화면에 맞춘 차트와 촘촘한 설정 패널 */
 .content{height:100vh;height:100dvh;display:flex;flex-direction:column;padding:14px 20px 10px;max-width:none;overflow:hidden}
 .chart-panel{flex:1;min-height:0;display:flex;flex-direction:column;border-radius:12px}
 .chart-toolbar{flex-shrink:0;padding:10px 16px;gap:8px}.toolbar-title small{margin-top:3px}
@@ -47,8 +47,13 @@ label.chk,label.rdo{padding:5px 0}.ind-item{padding:2px 8px;margin:1px -8px}.ind
 <div class="app" id="app">
   <div class="overlay" id="overlay"></div>
   <aside class="sidebar" id="sidebar">
-    <div class="brand"><span class="brand-mark">∿</span><div>Macro Lens<small>v1.3.0</small></div></div>
+    <div class="brand"><span class="brand-mark">∿</span><div>Macro Lens<small>v1.3.1</small></div></div>
     
+    <details class="settings-details" id="stocks-section" open><summary><span>미국 주식 검색·추가 <button type="button" class="info-btn" data-help="stocks" aria-label="주식 추가 설명">i</button></span></summary>
+      <form id="stock-search" class="stock-search"><input id="stock-query" placeholder="티커 또는 회사명" aria-label="미국 주식 검색" maxlength="100" autocomplete="off"><button type="submit" id="stock-search-button">검색</button></form>
+      <div id="stock-results"></div><div id="stock-status" role="status" aria-live="polite"></div><div id="stock-group"></div>
+    </details>
+
     <div class="sb-h">날짜 범위 <button type="button" class="info-btn" data-help="dates" aria-label="날짜 범위 설명">i</button></div>
     <div class="date-row"><label for="start-date">시작일</label><input type="date" id="start-date"></div>
     <div class="date-row"><label for="end-date">종료일</label><input type="date" id="end-date"></div>
@@ -73,10 +78,6 @@ label.chk,label.rdo{padding:5px 0}.ind-item{padding:2px 8px;margin:1px -8px}.ind
     <hr class="sb-div">
     <div class="sb-h">지표 표시</div>
     <div id="ind-group"></div>
-    <details class="settings-details" id="stocks-section"><summary><span>미국 주식 추가 <button type="button" class="info-btn" data-help="stocks" aria-label="주식 추가 설명">i</button></span></summary>
-      <form id="stock-search" class="stock-search"><input id="stock-query" placeholder="티커 또는 회사명" aria-label="미국 주식 검색" maxlength="100" autocomplete="off"><button type="submit" id="stock-search-button">검색</button></form>
-      <div id="stock-results"></div><div id="stock-status" role="status" aria-live="polite"></div><div id="stock-group"></div>
-    </details>
     <details class="settings-details" id="financial-section"><summary><span>재무지표 <button type="button" class="info-btn" data-help="financial" aria-label="재무지표 설명">i</button></span></summary><div id="financial-group"></div></details>
 
     <details class="settings-details" id="axis-section"><summary>지표별 축 배정</summary>
@@ -572,7 +573,7 @@ function buildUI(){
     const st=S.style[ind.id],entry=ind.financial?DATA.financials?.[ind.index+'_'+ind.metric]:null;
     const unavailable=ind.financial&&!entry?.dates?.length;
     const help=ind.financial?'<button type="button" class="info-btn" data-fin-help="'+ind.id+'" aria-label="'+ind.label+' 설명" title="'+ind.label+' 설명">i</button>':ind.id==='liquidity'?'<button type="button" class="info-btn" data-help="liquidity" aria-label="유동성 설명">i</button>':'';
-    return `<div class="ind-item${unavailable?' unavailable':''}"><div class="ind-heading"><label class="chk"><input type="checkbox" data-ind="${ind.id}"${S.show[ind.id]?' checked':''}${unavailable?' disabled':''}> ${escapeHTML(ind.shortLabel||ind.label)}${unavailable?'<span class="availability">미제공</span>':entry?.badge?'<span class="availability">'+entry.badge+'</span>':''}</label>${help}${ind.stock?'<button type="button" class="stock-remove" data-remove="'+ind.symbol+'" aria-label="주식 삭제">×</button>':''}</div><div class="ind-opts"><input type="color" data-sc="${ind.id}" value="${st.color}" title="색상"><input type="number" data-sw="${ind.id}" value="${st.width}" min="0.5" max="6" step="0.1" title="선 굵기"><select data-sd="${ind.id}" title="선 종류">${DASHES.map(d=>`<option value="${d}"${d===st.dash?' selected':''}>${DASH_LB[d]}</option>`).join('')}</select><label class="chk series-log"><input type="checkbox" data-log="${ind.id}"${S.log?.[ind.id]?' checked':''}> 로그 축 <button type="button" class="info-btn" data-help="log" aria-label="로그 축 설명">i</button></label></div></div>`;
+    return `<div class="ind-item${unavailable?' unavailable':''}"><div class="ind-heading"><label class="chk"><input type="checkbox" data-ind="${ind.id}"${S.show[ind.id]?' checked':''}${unavailable?' disabled':''}> ${escapeHTML(ind.shortLabel||ind.label)}${unavailable?'<span class="availability">미제공</span>':entry?.badge?'<span class="availability">'+entry.badge+'</span>':''}</label>${help}${ind.stock?'<button type="button" class="stock-remove" data-remove="'+ind.symbol+'" aria-label="주식 삭제">×</button>':''}</div><div class="ind-opts"><input type="color" data-sc="${ind.id}" value="${st.color}" title="색상"><input type="number" data-sw="${ind.id}" value="${st.width}" min="0.5" max="6" step="0.1" title="선 굵기"><select data-sd="${ind.id}" title="선 종류">${DASHES.map(d=>`<option value="${d}"${d===st.dash?' selected':''}>${DASH_LB[d]}</option>`).join('')}</select><label class="chk series-log"><input type="checkbox" data-log="${ind.id}"${S.log?.[ind.id]?' checked':''}> 로그 스케일 <button type="button" class="info-btn" data-help="log" aria-label="로그 축 설명">i</button></label></div></div>`;
   };
   document.getElementById('ind-group').innerHTML=INDICATORS.filter(ind=>!ind.financial).map(indicatorHTML).join('');
   document.getElementById('financial-group').innerHTML=FIN_INDEXES.map(([id,label])=>'<details class="fin-index"'+(FIN_INDICATORS.some(ind=>ind.index===id&&S.show[ind.id])?' open':'')+'><summary>'+label+'</summary>'+FIN_INDICATORS.filter(ind=>ind.index===id).map(indicatorHTML).join('')+'</details>').join('');

@@ -48,6 +48,6 @@ function decode(payload,defaults){
  }
  return o;
 }
-function encode(state){return {kind:KIND,schemaVersion:VERSION,appVersion:'1.3.0',savedAt:new Date().toISOString(),state:clone(state)};}
+function encode(state){return {kind:KIND,schemaVersion:VERSION,appVersion:'1.3.1',savedAt:new Date().toISOString(),state:clone(state)};}
 const api={KEY,encode,decode,validDate};root.MacroSettings=api;if(typeof module==='object'&&module.exports)module.exports=api;
 })(typeof window==='object'?window:globalThis);

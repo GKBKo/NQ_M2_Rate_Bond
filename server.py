@@ -69,6 +69,10 @@ def history(symbol):
     return data
 
 class Handler(SimpleHTTPRequestHandler):
+    def end_headers(self):
+        self.send_header('Cache-Control', 'no-store, max-age=0')
+        super().end_headers()
+
     def do_GET(self):
         url = urlparse(self.path)
         if url.path not in ['/api/search','/api/history']:
@@ -93,6 +97,6 @@ if __name__ == '__main__':
         try:server=ThreadingHTTPServer(('127.0.0.1',port),partial(Handler,directory=str(ROOT)));break
         except OSError:continue
     else:raise SystemExit('사용 가능한 포트가 없습니다.')
-    url=f'http://127.0.0.1:{port}/';print('Macro Lens v1.3.0:',url,flush=True)
+    url=f'http://127.0.0.1:{port}/';print('Macro Lens v1.3.1:',url,flush=True)
     if not args.no_browser:threading.Timer(.5,lambda:webbrowser.open(url)).start()
     server.serve_forever()
