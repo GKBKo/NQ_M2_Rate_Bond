@@ -117,4 +117,71 @@ def collect_financials(previous=None, fetch_html=get_html, quote_loader=None):
                 key = index + '_' + metric
                 out[key]['status'] = 'stale' if out[key].get('dates') else 'unavailable'
                 out[key]['reason'] = '지수 재무정보 수집 실패 · 기존값 유지' if out[key].get('dates') else '검증된 무료 지수 재무정보를 확보하지 못했습니다.'
+    return supplement_public(out, fetch_html)
+
+
+WSJ_URL = 'https://www.wsj.com/market-data/stocks/peyields?eafs_enabled=false'
+
+def parse_public_pe(html, today=None):
+    """Read each table's own date; never map NASDAQ 100 to Composite."""
+    today = today or date.today()
+    result = {}
+    for table in BeautifulSoup(html, 'html.parser').find_all('table'):
+        match = re.search(r'\b(\d{1,2}/\d{1,2}/\d{2})\b', table.get_text(' ', strip=True))
+        if not match:
+            continue
+        dt = datetime.strptime(match[1], '%m/%d/%y').date()
+        if dt > today:
+            continue
+        for tr in table.find_all('tr'):
+            cells = [c.get_text(' ', strip=True) for c in tr.find_all(['td', 'th'])]
+            if len(cells) < 4:
+                continue
+            index = {'Dow Jones Industrial Average': 'dow', 'S&P 500 Index': 'sp500'}.get(cells[0])
+            if not index:
+                continue
+            for metric, col in [('pe', 1), ('forward_pe', 3)]:
+                if index == 'sp500' and metric == 'pe':
+                    continue
+                val = number(cells[col], positive=True)
+                if val is not None:
+                    result[index + '_' + metric] = (dt.isoformat(), val)
+    if not result:
+        raise ValueError('No dated index valuation rows')
+    return result
+
+def supplement_public(out, fetch_html=get_html):
+    # Archival observations are dated year-end, not invented annual histories.
+    for metric, values in [('pe', [152.0, 31.0]), ('eps', [27.0, 133.0])]:
+        key = 'nasdaq_' + metric
+        if not out[key].get('dates') or out[key].get('status') == 'archival' or 'Whitepaper' in out[key].get('source', ''):
+            out[key] = dict(dates=['1999-12-31', '2013-12-31'], values=values,
+                source='NASDAQ Composite Whitepaper (2014-04-02), p.6 Table 11 / Bloomberg',
+                source_url='https://www.wsj.com/public/resources/documents/nasdaqcompretrospective.pdf',
+                retrieved_at=datetime.now(timezone.utc).isoformat(), status='archival', reason='',
+                sparse=True, badge='과거 2점',
+                basis='1999년 말·2013년 말의 두 관측값만 있습니다. 연속 시계열이나 최신값이 아닙니다. MAX 또는 20Y/30Y 기간에서 점으로 표시합니다. EPS 항목은 원문의 Index Earnings(구성기업 이익 합계 ÷ 지수 divisor)이며 정수 반올림 값입니다. 결측 연도를 보간하지 않습니다.')
+    keys = ['dow_pe', 'dow_forward_pe', 'sp500_forward_pe']
+    try:
+        rows = parse_public_pe(fetch_html(WSJ_URL))
+        for key in keys:
+            if key not in rows:
+                raise ValueError('Missing expected public row: ' + key)
+        for key, (dt, value) in rows.items():
+            old = out[key]
+            # Do not splice data from another provider with a different methodology.
+            history = dict(zip(old['dates'], old['values'])) if old.get('source_url') == WSJ_URL else {}
+            history[dt] = value
+            dates = sorted(history)
+            out[key] = dict(dates=dates, values=[history[d] for d in dates],
+                source='WSJ / Birinyi Associates / Dow Jones Market Data', source_url=WSJ_URL,
+                retrieved_at=datetime.now(timezone.utc).isoformat(), status='ok', reason='',
+                sparse=True, badge='시점 자료',
+                basis='공개 표의 기준일에 확보한 관측값입니다. 연간 결산값/연평균/완전한 과거 시계열이 아닙니다. 실제 PER는 TTM 보고이익 기준, 예상 PER는 향후 12개월 영업이익 추정 기준(금요일 주간 갱신)입니다. 예상값의 x축은 표 기준일이며 추정치 수정일과 다를 수 있습니다. 출처별 산식 차이가 있어 PER로 EPS를 역산하지 않습니다.')
+    except Exception as error:
+        print('Financial public table:', type(error).__name__)
+        for key in keys:
+            if out[key].get('source_url') == WSJ_URL:
+                out[key]['status'] = 'stale'
+                out[key]['reason'] = '공개 표 갱신 실패 · 이전 관측값 유지'
     return out

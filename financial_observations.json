@@ -1,0 +1,287 @@
+{
+  "checked_at": "2026-10-23",
+  "financials": {
+    "nasdaq_pe": {
+      "dates": [
+        "1999-12-31",
+        "2013-12-31"
+      ],
+      "values": [
+        152.0,
+        31.0
+      ],
+      "source": "NASDAQ Composite Whitepaper (2014-04-02), p.6 Table 11 / Bloomberg",
+      "source_url": "https://www.wsj.com/public/resources/documents/nasdaqcompretrospective.pdf",
+      "retrieved_at": "2026-10-23T11:36:45.898279+00:00",
+      "status": "archival",
+      "reason": "",
+      "sparse": true,
+      "badge": "과거 2점",
+      "basis": "1999년 말·2013년 말의 두 관측값만 있습니다. 연속 시계열이나 최신값이 아닙니다. MAX 또는 20Y/30Y 기간에서 점으로 표시합니다. EPS 항목은 원문의 Index Earnings(구성기업 이익 합계 ÷ 지수 divisor)이며 정수 반올림 값입니다. 결측 연도를 보간하지 않습니다."
+    },
+    "nasdaq_eps": {
+      "dates": [
+        "1999-12-31",
+        "2013-12-31"
+      ],
+      "values": [
+        27.0,
+        133.0
+      ],
+      "source": "NASDAQ Composite Whitepaper (2014-04-02), p.6 Table 11 / Bloomberg",
+      "source_url": "https://www.wsj.com/public/resources/documents/nasdaqcompretrospective.pdf",
+      "retrieved_at": "2026-10-23T11:36:45.898289+00:00",
+      "status": "archival",
+      "reason": "",
+      "sparse": true,
+      "badge": "과거 2점",
+      "basis": "1999년 말·2013년 말의 두 관측값만 있습니다. 연속 시계열이나 최신값이 아닙니다. MAX 또는 20Y/30Y 기간에서 점으로 표시합니다. EPS 항목은 원문의 Index Earnings(구성기업 이익 합계 ÷ 지수 divisor)이며 정수 반올림 값입니다. 결측 연도를 보간하지 않습니다."
+    },
+    "nasdaq_forward_pe": {
+      "dates": [],
+      "values": [],
+      "source": "",
+      "source_url": "",
+      "retrieved_at": null,
+      "basis": "",
+      "status": "unavailable",
+      "reason": "제공자가 이 지수의 해당 재무 값을 반환하지 않았습니다."
+    },
+    "nasdaq_forward_eps": {
+      "dates": [],
+      "values": [],
+      "source": "",
+      "source_url": "",
+      "retrieved_at": null,
+      "basis": "",
+      "status": "unavailable",
+      "reason": "제공자가 이 지수의 해당 재무 값을 반환하지 않았습니다."
+    },
+    "sp500_pe": {
+      "dates": [
+        "1996-01-01",
+        "1997-01-01",
+        "1998-01-01",
+        "1999-01-01",
+        "2000-01-01",
+        "2001-01-01",
+        "2002-01-01",
+        "2003-01-01",
+        "2004-01-01",
+        "2005-01-01",
+        "2006-01-01",
+        "2007-01-01",
+        "2008-01-01",
+        "2009-01-01",
+        "2010-01-01",
+        "2011-01-01",
+        "2012-01-01",
+        "2013-01-01",
+        "2014-01-01",
+        "2015-01-01",
+        "2016-01-01",
+        "2017-01-01",
+        "2018-01-01",
+        "2019-01-01",
+        "2020-01-01",
+        "2021-01-01",
+        "2022-01-01",
+        "2023-01-01",
+        "2024-01-01",
+        "2025-01-01",
+        "2026-01-01"
+      ],
+      "values": [
+        18.08,
+        19.53,
+        24.29,
+        32.92,
+        29.04,
+        27.55,
+        46.17,
+        31.43,
+        22.73,
+        19.99,
+        18.07,
+        17.36,
+        21.46,
+        70.91,
+        20.7,
+        16.3,
+        14.87,
+        17.03,
+        18.15,
+        20.02,
+        22.18,
+        23.59,
+        24.97,
+        19.6,
+        24.88,
+        35.96,
+        23.11,
+        22.82,
+        25.01,
+        28.16,
+        27.98
+      ],
+      "source": "Multpl (S&P / Shiller)",
+      "source_url": "https://www.multpl.com/s-p-500-pe-ratio/table/by-year",
+      "basis": "매년 1월 1일 관측값 · 직전 12개월(TTM) 기준. 달력연도 결산 실적 또는 연평균이 아닙니다. EPS는 명목값입니다. 과거 공개 시점별 빈티지 자료가 아니므로 백테스트 신호로 사용하지 마세요.",
+      "retrieved_at": "2026-10-23T05:42:14.112328+00:00",
+      "status": "ok",
+      "reason": ""
+    },
+    "sp500_eps": {
+      "dates": [
+        "1996-01-01",
+        "1997-01-01",
+        "1998-01-01",
+        "1999-01-01",
+        "2000-01-01",
+        "2001-01-01",
+        "2002-01-01",
+        "2003-01-01",
+        "2004-01-01",
+        "2005-01-01",
+        "2006-01-01",
+        "2007-01-01",
+        "2008-01-01",
+        "2009-01-01",
+        "2010-01-01",
+        "2011-01-01",
+        "2012-01-01",
+        "2013-01-01",
+        "2014-01-01",
+        "2015-01-01",
+        "2016-01-01",
+        "2017-01-01",
+        "2018-01-01",
+        "2019-01-01",
+        "2020-01-01",
+        "2021-01-01",
+        "2022-01-01",
+        "2023-01-01",
+        "2024-01-01",
+        "2025-01-01",
+        "2026-01-01"
+      ],
+      "values": [
+        33.99,
+        39.23,
+        39.66,
+        37.93,
+        49.1,
+        48.48,
+        24.69,
+        28.5,
+        49.83,
+        59.11,
+        70.78,
+        82.06,
+        64.25,
+        12.21,
+        54.29,
+        78.67,
+        87.48,
+        86.91,
+        100.42,
+        101.29,
+        86.5,
+        96.46,
+        111.73,
+        133.06,
+        131.76,
+        105.49,
+        197.88,
+        173.56,
+        192.08,
+        212.34,
+        247.66
+      ],
+      "source": "OfficialData (S&P / Shiller 재게시)",
+      "source_url": "https://www.officialdata.org/us-economy/s-p-500-earnings",
+      "basis": "매년 1월 1일 관측값 · 직전 12개월(TTM) 기준. 달력연도 결산 실적 또는 연평균이 아닙니다. EPS는 명목값입니다. 과거 공개 시점별 빈티지 자료가 아니므로 백테스트 신호로 사용하지 마세요.",
+      "retrieved_at": "2026-10-23T05:42:14.311098+00:00",
+      "status": "ok",
+      "reason": ""
+    },
+    "sp500_forward_pe": {
+      "dates": [
+        "2026-10-16"
+      ],
+      "values": [
+        19.25
+      ],
+      "source": "WSJ / Birinyi Associates / Dow Jones Market Data",
+      "source_url": "https://www.wsj.com/market-data/stocks/peyields?eafs_enabled=false",
+      "retrieved_at": "2026-10-23T11:36:45.929734+00:00",
+      "status": "ok",
+      "reason": "",
+      "sparse": true,
+      "badge": "시점 자료",
+      "basis": "공개 표의 기준일에 확보한 관측값입니다. 연간 결산값/연평균/완전한 과거 시계열이 아닙니다. 실제 PER는 TTM 보고이익 기준, 예상 PER는 향후 12개월 영업이익 추정 기준(금요일 주간 갱신)입니다. 예상값의 x축은 표 기준일이며 추정치 수정일과 다를 수 있습니다. 출처별 산식 차이가 있어 PER로 EPS를 역산하지 않습니다."
+    },
+    "sp500_forward_eps": {
+      "dates": [],
+      "values": [],
+      "source": "",
+      "source_url": "",
+      "retrieved_at": null,
+      "basis": "",
+      "status": "unavailable",
+      "reason": "제공자가 이 지수의 해당 재무 값을 반환하지 않았습니다."
+    },
+    "dow_pe": {
+      "dates": [
+        "2026-10-22"
+      ],
+      "values": [
+        21.14
+      ],
+      "source": "WSJ / Birinyi Associates / Dow Jones Market Data",
+      "source_url": "https://www.wsj.com/market-data/stocks/peyields?eafs_enabled=false",
+      "retrieved_at": "2026-10-23T11:36:45.929715+00:00",
+      "status": "ok",
+      "reason": "",
+      "sparse": true,
+      "badge": "시점 자료",
+      "basis": "공개 표의 기준일에 확보한 관측값입니다. 연간 결산값/연평균/완전한 과거 시계열이 아닙니다. 실제 PER는 TTM 보고이익 기준, 예상 PER는 향후 12개월 영업이익 추정 기준(금요일 주간 갱신)입니다. 예상값의 x축은 표 기준일이며 추정치 수정일과 다를 수 있습니다. 출처별 산식 차이가 있어 PER로 EPS를 역산하지 않습니다."
+    },
+    "dow_eps": {
+      "dates": [],
+      "values": [],
+      "source": "",
+      "source_url": "",
+      "retrieved_at": null,
+      "basis": "",
+      "status": "unavailable",
+      "reason": "제공자가 이 지수의 해당 재무 값을 반환하지 않았습니다."
+    },
+    "dow_forward_pe": {
+      "dates": [
+        "2026-10-22"
+      ],
+      "values": [
+        19.78
+      ],
+      "source": "WSJ / Birinyi Associates / Dow Jones Market Data",
+      "source_url": "https://www.wsj.com/market-data/stocks/peyields?eafs_enabled=false",
+      "retrieved_at": "2026-10-23T11:36:45.929730+00:00",
+      "status": "ok",
+      "reason": "",
+      "sparse": true,
+      "badge": "시점 자료",
+      "basis": "공개 표의 기준일에 확보한 관측값입니다. 연간 결산값/연평균/완전한 과거 시계열이 아닙니다. 실제 PER는 TTM 보고이익 기준, 예상 PER는 향후 12개월 영업이익 추정 기준(금요일 주간 갱신)입니다. 예상값의 x축은 표 기준일이며 추정치 수정일과 다를 수 있습니다. 출처별 산식 차이가 있어 PER로 EPS를 역산하지 않습니다."
+    },
+    "dow_forward_eps": {
+      "dates": [],
+      "values": [],
+      "source": "",
+      "source_url": "",
+      "retrieved_at": null,
+      "basis": "",
+      "status": "unavailable",
+      "reason": "제공자가 이 지수의 해당 재무 값을 반환하지 않았습니다."
+    }
+  }
+}
