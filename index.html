@@ -138,7 +138,7 @@
 
   <main class="content">
     <div class="dash-title">NASDAQ · M2 · 기준금리 · 글로벌 유동성 매크로 대시보드</div>
-    <div class="dash-subtitle">NASDAQ Composite · 미국 M2 통화량 · 연방기금금리 · Global Excess Liquidity Proxy(근사, 12M 선행) — FRED/Yahoo Finance</div>
+    <div class="dash-subtitle">NASDAQ Composite · 미국 M2 통화량 · 연방기금금리 · Global Excess Liquidity Proxy(근사, 시프트 없음) — FRED/Yahoo Finance</div>
     <div id="status"></div>
     <div id="chart-wrap">
       <div id="value-box"></div>
@@ -147,7 +147,7 @@
     <div class="src-note">
       데이터 출처: Yahoo Finance (나스닥) · FRED (M2SL, FEDFUNDS, WALCL, ECBASSETSW, JPNASSETS, DEXUSEU, DEXJPUS, DGS10, DGS30) ·
       <a href="https://fred.stlouisfed.org" target="_blank">fred.stlouisfed.org</a><br>
-      ※ '글로벌 유동성 프록시'는 Fed+ECB+BOJ 대차대조표(USD 환산) 합산 YoY%를 12개월 선행 표시한 근사치이며,
+      ※ '글로벌 유동성 프록시'는 Fed+ECB+BOJ 대차대조표(USD 환산) 합산 YoY%를 실제 관측 날짜에 표시한 근사치이며,
       MacroMicro의 'Global Excess Liquidity Proxy'(GDP가중 M2·정책금리, PBOC 포함) 원 지표와 수치가 동일하지 않습니다.
       <div class="updated" id="updated"></div>
     </div>
@@ -189,7 +189,7 @@ const INDICATORS = [
   {id:"nasdaq",   label:"나스닥",                              axLabel:"나스닥 축",        axDefault:0},
   {id:"m2",       label:"M2 (미국 통화량)",                    axLabel:"M2 축",            axDefault:1},
   {id:"fed",      label:"기준금리 (FFR)",                      axLabel:"기준금리 축",      axDefault:3},
-  {id:"liquidity",label:"글로벌 유동성 프록시 (Fed+ECB+BOJ, 12M 선행)", axLabel:"글로벌 유동성 축", axDefault:4},
+  {id:"liquidity",label:"글로벌 유동성 프록시 (Fed+ECB+BOJ, 시프트 없음)", axLabel:"글로벌 유동성 축", axDefault:4},
   {id:"dgs10",    label:"美 국채금리 10년물",                  axLabel:"10년물 축",        axDefault:5},
   {id:"dgs30",    label:"美 국채금리 30년물",                  axLabel:"30년물 축",        axDefault:6},
   {id:"spread",   label:"10Y-30Y 금리차 (스프레드)",          axLabel:"금리차 축",        axDefault:7},
@@ -199,7 +199,7 @@ const PERIODS = ["YTD","1Y","3Y","5Y","10Y","20Y","30Y","MAX"];
 let DATA = null;
 const S = { period:"10Y", start:null, end:null, ymode:"다중 Y축", ctype:"Line",
   showReg:true, regLog:true, stdMult:1.0,
-  show:{nasdaq:true,m2:true,fed:true,liquidity:true,dgs10:true,dgs30:false,spread:false},
+  show:{nasdaq:true,m2:false,fed:false,liquidity:false,dgs10:false,dgs30:false,spread:false},
   axis:{}, style:{} };
 S.style = JSON.parse(JSON.stringify(DEF_STYLE));
 
@@ -294,22 +294,9 @@ function render(){
     }
     if(ds.length) spread={dates:ds, values:vs};
   }
-  // 글로벌 유동성: start 이후만 (종료일 컷 없음 → 12M 선행 미래 표시)
-  let liqPlot=null, liqActual=null;
-  if(DATA.liquidity_shifted){
-    const ds=[],vs=[];
-    for(let i=0;i<DATA.liquidity_shifted.dates.length;i++){
-      if(DATA.liquidity_shifted.dates[i]>=start){ ds.push(DATA.liquidity_shifted.dates[i]); vs.push(DATA.liquidity_shifted.values[i]); }
-    }
-    if(ds.length) liqPlot={dates:ds, values:vs};
-  }
-  if(DATA.liquidity_actual){
-    const ds=[],vs=[];
-    for(let i=0;i<DATA.liquidity_actual.dates.length;i++){
-      if(DATA.liquidity_actual.dates[i]>=start){ ds.push(DATA.liquidity_actual.dates[i]); vs.push(DATA.liquidity_actual.values[i]); }
-    }
-    if(ds.length) liqActual={dates:ds, values:vs};
-  }
+  // 글로벌 유동성: 실제 관측 날짜를 사용하고 다른 지표와 동일하게 기간 필터 적용
+  const liqActual = filt(DATA.liquidity_actual, start, end);
+  const liqPlot = liqActual;
 
   if(!nd.dates.length){
     document.getElementById('status').innerHTML='<div class="status err">선택 기간에 나스닥 데이터가 없습니다.</div>';
@@ -340,7 +327,7 @@ function render(){
   if(spread&&spread.values.length){ last.spread=spread.values[spread.values.length-1];
     cards+=card("30Y-10Y 금리차 (%p)", fmt(last.spread,2)+"%p", deltaH(last.spread-spread.values[0],"%p")+" (기간 내)"); }
   if(liqActual&&liqActual.values.length){ last.liquidity=liqActual.values[liqActual.values.length-1];
-    cards+=card("글로벌 유동성 YoY (%)", fmt(last.liquidity,2)+"%", '<span class="delta-neu">Fed+ECB+BOJ 합산, 12M 선행 표시</span>'); }
+    cards+=card("글로벌 유동성 YoY (%)", fmt(last.liquidity,2)+"%", '<span class="delta-neu">Fed+ECB+BOJ 합산, 시프트 없음</span>'); }
 
   // ── 트레이스 & 축 배정 ──
   const AX = S.ymode==="다중 Y축" ? S.axis
@@ -397,7 +384,7 @@ function render(){
   // 글로벌 유동성
   if(S.show.liquidity && liqPlot && liqPlot.values.length){
     const v=normalize(liqPlot,S.ymode);
-    traces.push({type:"scatter",mode:"lines",x:v.dates,y:v.values,name:"글로벌 유동성 프록시 (YoY%, 12M 선행)",line:lineOf('liquidity'),yaxis:AX.liquidity});
+    traces.push({type:"scatter",mode:"lines",x:v.dates,y:v.values,name:"글로벌 유동성 프록시 (YoY%, 시프트 없음)",line:lineOf('liquidity'),yaxis:AX.liquidity});
     reg(AX.liquidity,"글로벌유동성",COLORS.liquidity);
   }
   // 10년물

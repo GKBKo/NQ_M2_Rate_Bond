@@ -95,12 +95,10 @@ def load_global_liquidity():
         print("BOJ:", e)
 
     if total is None or total.dropna().empty:
-        return None, None
+        return None
     total = total.dropna().sort_index()
     yoy = (total.pct_change(12) * 100).dropna()
-    shifted = yoy.copy()
-    shifted.index = shifted.index + pd.DateOffset(months=12)
-    return shifted, yoy
+    return yoy
 
 def ser(idx, vals):
     return {
@@ -111,7 +109,7 @@ def ser(idx, vals):
 def main():
     nd = load_nasdaq()
     fr = load_fred()
-    liq_shifted, liq_actual = load_global_liquidity()
+    liq_actual = load_global_liquidity()
 
     data = {"updated": date.today().strftime("%Y-%m-%d")}
 
@@ -126,7 +124,6 @@ def main():
     data["fed"]   = ser(fr["fed"].index,   fr["fed"].values)   if fr["fed"]   is not None else None
     data["dgs10"] = ser(fr["dgs10"].index, fr["dgs10"].values) if fr["dgs10"] is not None else None
     data["dgs30"] = ser(fr["dgs30"].index, fr["dgs30"].values) if fr["dgs30"] is not None else None
-    data["liquidity_shifted"] = ser(liq_shifted.index, liq_shifted.values) if liq_shifted is not None else None
     data["liquidity_actual"]  = ser(liq_actual.index,  liq_actual.values)  if liq_actual  is not None else None
 
     with open("data.json", "w", encoding="utf-8") as f:
