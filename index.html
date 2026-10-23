@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NASDAQ · M2 · 기준금리 · 글로벌 유동성 매크로 대시보드</title>
+<script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin:0; padding:0; }
+  body {
+    background:#ffffff; color:#1e293b;
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Malgun Gothic',sans-serif;
+    font-size:14px;
+  }
+  /* 레이아웃 */
+  .app { display:flex; min-height:100vh; }
+  .sidebar {
+    width:270px; flex-shrink:0; background:#f1f5f9; border-right:1px solid #e2e8f0;
+    padding:16px 16px 40px; overflow-y:auto; height:100vh; position:sticky; top:0;
+  }
+  .content { flex:1; padding:18px 22px 40px; min-width:0; }
+  .sb-h { font-weight:800; font-size:0.95rem; margin:18px 0 8px; }
+  .sb-h:first-child { margin-top:0; }
+  .sb-sub { font-size:0.78rem; color:#475569; font-weight:600; margin:10px 0 4px; }
+  hr.sb-div { border:none; border-top:1px solid #cbd5e1; margin:14px 0; }
+  /* 컨트롤 */
+  .chips { display:flex; flex-wrap:wrap; gap:6px; }
+  .chip {
+    padding:5px 10px; border:1px solid #cbd5e1; border-radius:6px; background:#fff;
+    cursor:pointer; font-size:0.8rem; user-select:none;
+  }
+  .chip.active { background:#1d4ed8; color:#fff; border-color:#1d4ed8; font-weight:700; }
+  label.rdo, label.chk { display:flex; align-items:center; gap:7px; padding:3px 0; cursor:pointer; font-size:0.85rem; }
+  input[type=date] { width:100%; padding:6px 8px; border:1px solid #cbd5e1; border-radius:6px; font-size:0.85rem; }
+  select { width:100%; padding:5px 6px; border:1px solid #cbd5e1; border-radius:6px; font-size:0.8rem; margin-bottom:6px; background:#fff; }
+  input[type=range] { width:100%; }
+  .slider-val { font-size:0.8rem; font-weight:700; color:#1d4ed8; }
+  /* 헤더 */
+  .dash-title {
+    font-family:'Courier New',monospace; font-size:1.4rem; font-weight:800; letter-spacing:0.04em;
+    color:#0f172a; border-bottom:2px solid #1e3a8a; padding-bottom:10px; margin:0 0 4px;
+  }
+  .dash-subtitle { font-size:0.82rem; color:#475569; margin-bottom:16px; }
+  /* 메트릭 카드 */
+  .metric-row { display:flex; gap:12px; margin-bottom:16px; flex-wrap:wrap; }
+  .metric-card {
+    background:#f8fafc; border:1px solid #cbd5e1; border-radius:8px; padding:10px 18px;
+    min-width:150px; flex:1; box-shadow:0 1px 2px rgba(0,0,0,0.04);
+  }
+  .metric-label { font-size:0.7rem; color:#64748b; letter-spacing:0.05em; text-transform:uppercase; font-weight:600; }
+  .metric-value { font-size:1.3rem; font-weight:800; color:#0f172a; font-family:'Courier New',monospace; }
+  .metric-delta { font-size:0.76rem; margin-top:2px; font-weight:600; }
+  .delta-up { color:#dc2626; } .delta-down { color:#2563eb; } .delta-neu { color:#64748b; }
+  hr.dash-divider { border:none; border-top:1px solid #cbd5e1; margin:6px 0 14px; }
+  /* 차트 */
+  #chart-wrap { position:relative; width:100%; }
+  #value-box {
+    position:absolute; top:8px; left:8px; z-index:20; background:rgba(255,255,255,0.94);
+    border:1px solid #cbd5e1; border-radius:6px; padding:8px 10px; font-size:10px;
+    line-height:1.55; color:#1e293b; white-space:nowrap; box-shadow:0 1px 3px rgba(0,0,0,0.08);
+    pointer-events:none;
+  }
+  #plotly-div .hoverlayer .hovertext { display:none !important; }
+  .src-note { font-size:0.72rem; color:#64748b; margin-top:8px; text-align:right; }
+  .src-note a { color:#1d4ed8; }
+  .status { padding:10px 14px; border-radius:6px; font-size:0.85rem; margin-bottom:12px; }
+  .status.err { background:#fef2f2; border:1px solid #fecaca; color:#b91c1c; }
+  .status.warn { background:#fffbeb; border:1px solid #fde68a; color:#92400e; }
+  .updated { font-size:0.72rem; color:#94a3b8; }
+  /* 모바일 */
+  .hamburger {
+    display:none; position:fixed; top:10px; left:10px; z-index:1000; background:#1d4ed8; color:#fff;
+    border:none; border-radius:6px; padding:8px 12px; font-size:1rem; cursor:pointer;
+  }
+  .overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.35); z-index:900; }
+  @media (max-width: 860px) {
+    .hamburger { display:block; }
+    .sidebar {
+      position:fixed; left:0; top:0; height:100vh; z-index:950; transform:translateX(-100%);
+      transition:transform 0.25s ease; box-shadow:2px 0 12px rgba(0,0,0,0.15);
+    }
+    .app.open .sidebar { transform:translateX(0); }
+    .app.open .overlay { display:block; }
+    .content { padding:52px 12px 32px; }
+    .dash-title { font-size:1.05rem; }
+    .metric-card { min-width:calc(50% - 6px); padding:8px 12px; }
+    .metric-value { font-size:1.05rem; }
+  }
+  /* 지표별 스타일 옵션 */
+  .ind-item { margin-bottom:9px; }
+  .ind-item .chk { padding:2px 0; }
+  .ind-opts { display:flex; gap:5px; align-items:center; margin:3px 0 0 22px; }
+  .ind-opts input[type=color] { width:30px; height:24px; padding:0; border:1px solid #cbd5e1; border-radius:4px; cursor:pointer; background:#fff; flex:0 0 auto; }
+  .ind-opts input[type=number] { width:50px; padding:3px 4px; border:1px solid #cbd5e1; border-radius:4px; font-size:0.75rem; margin:0; flex:0 0 auto; }
+  .ind-opts select { flex:1 1 auto; min-width:0; padding:3px 4px; font-size:0.72rem; margin:0; }
+</style>
+</head>
+<body>
+<button class="hamburger" id="hamburger">&#9776; 설정</button>
+<div class="app" id="app">
+  <div class="overlay" id="overlay"></div>
+  <aside class="sidebar" id="sidebar">
+    <div class="sb-h">분석 기간</div>
+    <div class="chips" id="period-chips"></div>
+    <div class="sb-sub">시작일</div>
+    <input type="date" id="start-date">
+    <div class="sb-sub">종료일</div>
+    <input type="date" id="end-date">
+
+    <hr class="sb-div">
+    <div class="sb-h">Y축 설정</div>
+    <div id="ymode-group"></div>
+
+    <hr class="sb-div">
+    <div class="sb-h">차트 타입</div>
+    <div id="ctype-group"></div>
+
+    <hr class="sb-div">
+    <div class="sb-h">회귀 채널</div>
+    <label class="chk"><input type="checkbox" id="show-reg" checked> 회귀 채널 표시</label>
+    <div id="reg-opts">
+      <label class="chk"><input type="checkbox" id="reg-log" checked> 로그 회귀 (권장)</label>
+      <div class="sb-sub">표준편차 배수: <span class="slider-val" id="std-val">1.0</span></div>
+      <input type="range" id="std-mult" min="0.5" max="4.0" step="0.1" value="1.0">
+    </div>
+
+    <hr class="sb-div">
+    <div class="sb-h">지표 표시</div>
+    <div id="ind-group"></div>
+
+    <div id="axis-section">
+      <hr class="sb-div">
+      <div class="sb-h">축 배정 (지표별 Y축)</div>
+      <div id="axis-group"></div>
+    </div>
+  </aside>
+
+  <main class="content">
+    <div class="dash-title">NASDAQ · M2 · 기준금리 · 글로벌 유동성 매크로 대시보드</div>
+    <div class="dash-subtitle">NASDAQ Composite · 미국 M2 통화량 · 연방기금금리 · Global Excess Liquidity Proxy(근사, 시프트 없음) — FRED/Yahoo Finance</div>
+    <div id="status"></div>
+    <div id="chart-wrap">
+      <div id="value-box"></div>
+      <div id="plotly-div" style="width:100%;"></div>
+    </div>
+    <div class="src-note">
+      데이터 출처: Yahoo Finance (나스닥) · FRED (M2SL, FEDFUNDS, WALCL, ECBASSETSW, JPNASSETS, DEXUSEU, DEXJPUS, DGS10, DGS30) ·
+      <a href="https://fred.stlouisfed.org" target="_blank">fred.stlouisfed.org</a><br>
+      ※ '글로벌 유동성 프록시'는 Fed+ECB+BOJ 대차대조표(USD 환산) 합산 YoY%를 실제 관측 날짜에 표시한 근사치이며,
+      MacroMicro의 'Global Excess Liquidity Proxy'(GDP가중 M2·정책금리, PBOC 포함) 원 지표와 수치가 동일하지 않습니다.
+      <div class="updated" id="updated"></div>
+    </div>
+  </main>
+</div>
+
+<script>
+
+// ══════════════════════════════════════════════════════════════════════════
+// 색상 (원본과 동일)
+const COLORS = {
+  nasdaq:"#1d4ed8", m2:"#dc2626", fed:"#15803d", liquidity:"#7c3aed",
+  dgs10:"#0891b2", dgs30:"#c2410c", spread:"#65a30d"
+};
+// 지표별 기본 스타일 (색상 / 굵기 / 선종류) — 사용자 조정 가능
+const DEF_STYLE = {
+  nasdaq:{color:"#1d4ed8", width:1.8, dash:"solid"},
+  m2:{color:"#dc2626", width:1, dash:"dot"},
+  fed:{color:"#15803d", width:1, dash:"dot"},
+  liquidity:{color:"#7c3aed", width:1, dash:"dashdot"},
+  dgs10:{color:"#0891b2", width:1, dash:"dot"},
+  dgs30:{color:"#c2410c", width:1, dash:"dot"},
+  spread:{color:"#65a30d", width:1, dash:"dashdot"}
+};
+function lineOf(id){ const s=S.style[id]; return {color:s.color, width:s.width, dash:s.dash}; }
+// 축 선택지
+const AXIS_CHOICES = ["메인(좌)","왼쪽 보조축 1","왼쪽 보조축 2","오른쪽 보조축 1",
+  "오른쪽 보조축 2","오른쪽 보조축 3","오른쪽 보조축 4","오른쪽 보조축 5"];
+const AXIS_KEY_OF = {"메인(좌)":"y","왼쪽 보조축 1":"y2","왼쪽 보조축 2":"y7",
+  "오른쪽 보조축 1":"y3","오른쪽 보조축 2":"y4","오른쪽 보조축 3":"y5",
+  "오른쪽 보조축 4":"y6","오른쪽 보조축 5":"y8"};
+const AXIS_NAME_OF = {"y":"yaxis","y2":"yaxis2","y3":"yaxis3","y4":"yaxis4",
+  "y5":"yaxis5","y6":"yaxis6","y7":"yaxis7","y8":"yaxis8"};
+const LEFT_AXIS_KEYS=["y2","y7"], RIGHT_AXIS_KEYS=["y3","y4","y5","y6","y8"];
+const AXIS_STEP=0.026;
+
+// 지표 정의 (표시명, 기본 축 index, 기본 체크)
+const INDICATORS = [
+  {id:"nasdaq",   label:"나스닥",                              axLabel:"나스닥 축",        axDefault:0},
+  {id:"m2",       label:"M2 (미국 통화량)",                    axLabel:"M2 축",            axDefault:1},
+  {id:"fed",      label:"기준금리 (FFR)",                      axLabel:"기준금리 축",      axDefault:3},
+  {id:"liquidity",label:"글로벌 유동성 프록시 (Fed+ECB+BOJ, 시프트 없음)", axLabel:"글로벌 유동성 축", axDefault:4},
+  {id:"dgs10",    label:"美 국채금리 10년물",                  axLabel:"10년물 축",        axDefault:5},
+  {id:"dgs30",    label:"美 국채금리 30년물",                  axLabel:"30년물 축",        axDefault:6},
+  {id:"spread",   label:"10Y-30Y 금리차 (스프레드)",          axLabel:"금리차 축",        axDefault:7},
+];
+const PERIODS = ["YTD","1Y","3Y","5Y","10Y","20Y","30Y","MAX"];
+
+let DATA = null;
+const S = { period:"10Y", start:null, end:null, ymode:"다중 Y축", ctype:"Line",
+  showReg:true, regLog:true, stdMult:1.0,
+  show:{nasdaq:true,m2:false,fed:false,liquidity:false,dgs10:false,dgs30:false,spread:false},
+  axis:{}, style:{} };
+S.style = JSON.parse(JSON.stringify(DEF_STYLE));
+
+// ── 유틸 ──────────────────────────────────────────────────────────────────
+function fmt(v, d){ if(v===null||v===undefined||isNaN(v)) return "—";
+  return v.toLocaleString(undefined,{minimumFractionDigits:d,maximumFractionDigits:d}); }
+function todayStr(){ return DATA && DATA.updated ? DATA.updated : new Date().toISOString().slice(0,10); }
+
+function periodStart(period, endS){
+  const end = new Date(endS);
+  if(period==="MAX") return "1996-01-01";
+  if(period==="YTD") return end.getFullYear()+"-01-01";
+  const yrs={ "1Y":1,"3Y":3,"5Y":5,"10Y":10,"20Y":20,"30Y":30 }[period];
+  const d=new Date(end); d.setFullYear(d.getFullYear()-yrs);
+  return d.toISOString().slice(0,10);
+}
+
+// 시리즈 {dates,values} 를 [start,end] 로 필터
+function filt(ser, start, end){
+  if(!ser) return null;
+  const ds=[], vs=[];
+  for(let i=0;i<ser.dates.length;i++){
+    const dt=ser.dates[i];
+    if(dt>=start && dt<=end){ ds.push(dt); vs.push(ser.values[i]); }
+  }
+  return {dates:ds, values:vs};
+}
+// 나스닥 OHLC 필터
+function filtND(nd, start, end){
+  const o={dates:[],open:[],high:[],low:[],close:[]};
+  for(let i=0;i<nd.dates.length;i++){
+    const dt=nd.dates[i];
+    if(dt>=start && dt<=end){
+      o.dates.push(dt); o.open.push(nd.open[i]); o.high.push(nd.high[i]);
+      o.low.push(nd.low[i]); o.close.push(nd.close[i]);
+    }
+  }
+  return o;
+}
+// 정규화
+function normalize(ser, mode){
+  if(!ser) return ser;
+  const v=ser.values, n=v.length;
+  if(mode==="지수화 (기준=100)"){
+    const base=v.find(x=>x!==null && !isNaN(x));
+    return {dates:ser.dates, values:v.map(x=>(x===null||isNaN(x))?null:x/base*100)};
+  }
+  if(mode==="증감률 (수익률%)"){
+    const out=new Array(n).fill(null); let cum=0;
+    for(let i=1;i<n;i++){
+      if(v[i]!==null && v[i-1]!==null && v[i-1]!==0){
+        cum += (v[i]/v[i-1]-1)*100; out[i]=cum;
+      } else { out[i]=cum; }
+    }
+    return {dates:ser.dates, values:out};
+  }
+  return ser;
+}
+// 선형 최소제곱 (deg1)
+function polyfit1(x,y){
+  const n=x.length; let sx=0,sy=0,sxx=0,sxy=0;
+  for(let i=0;i<n;i++){ sx+=x[i]; sy+=y[i]; sxx+=x[i]*x[i]; sxy+=x[i]*y[i]; }
+  const slope=(n*sxy - sx*sy)/(n*sxx - sx*sx);
+  const ic=(sy - slope*sx)/n;
+  return [slope, ic];
+}
+function popStd(arr){
+  const n=arr.length; let m=0; for(const a of arr) m+=a; m/=n;
+  let s=0; for(const a of arr) s+=(a-m)*(a-m); return Math.sqrt(s/n);
+}
+
+// ── 렌더 ──────────────────────────────────────────────────────────────────
+function render(){
+  for(const id in S.style){ COLORS[id]=S.style[id].color; }
+  const start=S.start, end=S.end;
+  const useLog = !(S.ymode==="지수화 (기준=100)" || S.ymode==="증감률 (수익률%)");
+
+  // 데이터 필터
+  const nd  = filtND(DATA.nasdaq, start, end);
+  const m2  = filt(DATA.m2, start, end);
+  const fed = filt(DATA.fed, start, end);
+  const d10 = filt(DATA.dgs10, start, end);
+  const d30 = filt(DATA.dgs30, start, end);
+  // 스프레드 30Y-10Y (날짜 교집합)
+  let spread=null;
+  if(d10 && d30 && d10.dates.length && d30.dates.length){
+    const m={}; for(let i=0;i<d10.dates.length;i++) if(d10.values[i]!==null) m[d10.dates[i]]=d10.values[i];
+    const ds=[],vs=[];
+    for(let i=0;i<d30.dates.length;i++){
+      const dt=d30.dates[i];
+      if(d30.values[i]!==null && m[dt]!==undefined){ ds.push(dt); vs.push(d30.values[i]-m[dt]); }
+    }
+    if(ds.length) spread={dates:ds, values:vs};
+  }
+  // 글로벌 유동성: 실제 관측 날짜를 사용하고 다른 지표와 동일하게 기간 필터 적용
+  const liqActual = filt(DATA.liquidity_actual, start, end);
+  const liqPlot = liqActual;
+
+  if(!nd.dates.length){
+    document.getElementById('status').innerHTML='<div class="status err">선택 기간에 나스닥 데이터가 없습니다.</div>';
+    return;
+  }
+  document.getElementById('status').innerHTML='';
+
+  // ── 메트릭 카드 ──
+  const last = {};
+  let cards="";
+  function card(label,val,delta){ return `<div class="metric-card"><div class="metric-label">${label}</div><div class="metric-value">${val}</div><div class="metric-delta">${delta}</div></div>`; }
+  function deltaH(v,unit){ if(v===null) return '<span class="delta-neu">—</span>';
+    const cls=v>0?"delta-up":(v<0?"delta-down":"delta-neu"); const ar=v>0?"▲":(v<0?"▼":"—");
+    return `<span class="${cls}">${ar} ${fmt(v,2)}${unit}</span>`; }
+
+  const ndc=nd.close;
+  last.nasdaq=ndc[ndc.length-1];
+  const chgNd=(ndc[ndc.length-1]/ndc[0]-1)*100;
+  cards+=card("나스닥 (최근)", fmt(last.nasdaq,0), deltaH(chgNd,"%")+" (기간 내)");
+  if(m2&&m2.values.length){ last.m2=m2.values[m2.values.length-1];
+    cards+=card("M2 (십억달러)", fmt(last.m2,0), deltaH(last.m2-m2.values[0],"B")+" (기간 내)"); }
+  if(fed&&fed.values.length){ last.fed=fed.values[fed.values.length-1];
+    cards+=card("기준금리 (%)", fmt(last.fed,2)+"%", deltaH(last.fed-fed.values[0],"%p")+" (기간 내)"); }
+  if(d10&&d10.values.length){ last.dgs10=d10.values[d10.values.length-1];
+    cards+=card("美 국채 10년물 (%)", fmt(last.dgs10,2)+"%", deltaH(last.dgs10-d10.values[0],"%p")+" (기간 내)"); }
+  if(d30&&d30.values.length){ last.dgs30=d30.values[d30.values.length-1];
+    cards+=card("美 국채 30년물 (%)", fmt(last.dgs30,2)+"%", deltaH(last.dgs30-d30.values[0],"%p")+" (기간 내)"); }
+  if(spread&&spread.values.length){ last.spread=spread.values[spread.values.length-1];
+    cards+=card("30Y-10Y 금리차 (%p)", fmt(last.spread,2)+"%p", deltaH(last.spread-spread.values[0],"%p")+" (기간 내)"); }
+  if(liqActual&&liqActual.values.length){ last.liquidity=liqActual.values[liqActual.values.length-1];
+    cards+=card("글로벌 유동성 YoY (%)", fmt(last.liquidity,2)+"%", '<span class="delta-neu">Fed+ECB+BOJ 합산, 시프트 없음</span>'); }
+
+  // ── 트레이스 & 축 배정 ──
+  const AX = S.ymode==="다중 Y축" ? S.axis
+    : {nasdaq:"y",m2:"y",fed:"y",liquidity:"y",dgs10:"y",dgs30:"y",spread:"y"};
+  const traces=[];
+  const activeAxis={}; // axisKey -> [{label,color}]
+  function reg(k,label,color){ (activeAxis[k]=activeAxis[k]||[]).push({label,color}); }
+
+  // 나스닥
+  if(S.show.nasdaq){
+    const ax=AX.nasdaq;
+    if(S.ctype==="Bar+Lines (봉차트)"){
+      traces.push({type:"candlestick", x:nd.dates, open:nd.open, high:nd.high, low:nd.low, close:nd.close,
+        increasing:{line:{color:"#dc2626"}}, decreasing:{line:{color:"#1d4ed8"}},
+        name:"나스닥 (봉차트)", yaxis:ax, showlegend:true});
+    } else {
+      const nv=normalize({dates:nd.dates,values:nd.close}, S.ymode);
+      traces.push({type:"scatter", mode:"lines", x:nv.dates, y:nv.values, name:"나스닥",
+        line:lineOf('nasdaq'), yaxis:ax});
+    }
+    // 회귀 채널
+    if(S.showReg){
+      const nv=normalize({dates:nd.dates,values:nd.close}, S.ymode);
+      const xs=[],ys=[],dts=[];
+      for(let i=0;i<nv.values.length;i++){ if(nv.values[i]!==null && !isNaN(nv.values[i])){ xs.push(xs.length); ys.push(nv.values[i]); dts.push(nv.dates[i]); } }
+      if(xs.length>2){
+        const fy = S.regLog ? ys.map(Math.log) : ys.slice();
+        const [sl,ic]=polyfit1(xs,fy);
+        const ctr=xs.map(x=>sl*x+ic);
+        const resid=fy.map((v,i)=>v-ctr[i]);
+        const std=popStd(resid);
+        let cV,uV,lV;
+        if(S.regLog){ cV=ctr.map(Math.exp); uV=ctr.map(c=>Math.exp(c+S.stdMult*std)); lV=ctr.map(c=>Math.exp(c-S.stdMult*std)); }
+        else { cV=ctr.slice(); uV=ctr.map(c=>c+S.stdMult*std); lV=ctr.map(c=>c-S.stdMult*std); }
+        traces.push({type:"scatter",mode:"lines",x:dts,y:cV,name:"중심 회귀선",line:{color:"#ea580c",width:1.4,dash:"dash"},yaxis:ax});
+        traces.push({type:"scatter",mode:"lines",x:dts,y:uV,name:`상단 채널 (+${S.stdMult.toFixed(1)}σ)`,line:{color:"rgba(234,88,12,0.55)",width:1,dash:"dot"},yaxis:ax});
+        traces.push({type:"scatter",mode:"lines",x:dts,y:lV,name:`하단 채널 (-${S.stdMult.toFixed(1)}σ)`,line:{color:"rgba(234,88,12,0.55)",width:1,dash:"dot"},yaxis:ax});
+      }
+    }
+    reg(ax,"나스닥",COLORS.nasdaq);
+  }
+  // M2
+  if(S.show.m2 && m2 && m2.values.length){
+    const v=normalize(m2,S.ymode);
+    traces.push({type:"scatter",mode:"lines",x:v.dates,y:v.values,name:"M2 (십억달러)",line:lineOf('m2'),yaxis:AX.m2});
+    reg(AX.m2,"M2",COLORS.m2);
+  }
+  // 기준금리
+  if(S.show.fed && fed && fed.values.length){
+    const v=normalize(fed,S.ymode);
+    traces.push({type:"scatter",mode:"lines",x:v.dates,y:v.values,name:"기준금리 (FFR%)",line:lineOf('fed'),yaxis:AX.fed});
+    reg(AX.fed,"기준금리",COLORS.fed);
+  }
+  // 글로벌 유동성
+  if(S.show.liquidity && liqPlot && liqPlot.values.length){
+    const v=normalize(liqPlot,S.ymode);
+    traces.push({type:"scatter",mode:"lines",x:v.dates,y:v.values,name:"글로벌 유동성 프록시 (YoY%, 시프트 없음)",line:lineOf('liquidity'),yaxis:AX.liquidity});
+    reg(AX.liquidity,"글로벌유동성",COLORS.liquidity);
+  }
+  // 10년물
+  if(S.show.dgs10 && d10 && d10.values.length){
+    const v=normalize(d10,S.ymode);
+    traces.push({type:"scatter",mode:"lines",x:v.dates,y:v.values,name:"美 국채 10년물 (%)",line:lineOf('dgs10'),yaxis:AX.dgs10});
+    reg(AX.dgs10,"美10Y",COLORS.dgs10);
+  }
+  // 30년물
+  if(S.show.dgs30 && d30 && d30.values.length){
+    const v=normalize(d30,S.ymode);
+    traces.push({type:"scatter",mode:"lines",x:v.dates,y:v.values,name:"美 국채 30년물 (%)",line:lineOf('dgs30'),yaxis:AX.dgs30});
+    reg(AX.dgs30,"美30Y",COLORS.dgs30);
+  }
+  // 금리차
+  if(S.show.spread && spread && spread.values.length){
+    const v=normalize(spread,S.ymode);
+    traces.push({type:"scatter",mode:"lines",x:v.dates,y:v.values,name:"30Y-10Y 금리차 (%p)",line:lineOf('spread'),yaxis:AX.spread});
+    reg(AX.spread,"10Y-30Y금리차",COLORS.spread);
+  }
+
+  // ── Y축 레이아웃 ──
+  const logTarget = (useLog && S.show.nasdaq) ? AX.nasdaq : null;
+  function axisTitle(k, ndOverride){
+    const es=activeAxis[k]||[]; if(!es.length) return ["값","#334155"];
+    const labels=es.map(e=>(e.label==="나스닥"&&ndOverride)?ndOverride:e.label);
+    const color=es.length===1?es[0].color:"#334155";
+    return [labels.join(" / "), color];
+  }
+  function axisCfg(title,color,log,side,overlaying,position,anchor){
+    const cfg={ title:{text:title,font:{color:color,size:11}}, tickfont:{color:color,size:10},
+      showgrid:(overlaying===undefined||overlaying===null), gridcolor:"#e2e8f0",
+      zeroline:false, linecolor:"#cbd5e1" };
+    if(log) cfg.type="log";
+    if(overlaying){ cfg.overlaying="y"; cfg.side=side; cfg.showgrid=false; }
+    if(position!==undefined && position!==null){ cfg.position=position; cfg.anchor=anchor||"free"; }
+    return cfg;
+  }
+
+  const layout={ xaxis:{ title:"날짜", showgrid:true, gridcolor:"#e2e8f0", linecolor:"#cbd5e1",
+      rangeslider:{visible:false}, showspikes:true, spikemode:"across", spikesnap:"cursor",
+      spikedash:"dot", spikethickness:1, spikecolor:"#94a3b8" },
+    plot_bgcolor:"#ffffff", paper_bgcolor:"#ffffff", font:{color:"#1e293b",size:11},
+    legend:{ orientation:"h", yanchor:"bottom", y:1.01, xanchor:"left", x:0,
+      font:{size:10,color:"#1e293b"}, bgcolor:"rgba(255,255,255,0.85)", bordercolor:"#cbd5e1", borderwidth:1 },
+    hovermode:"x", margin:{l:55,r:65,t:60,b:50},
+    height: window.innerWidth<=860 ? 460 : 680 };
+
+  if(S.ymode==="다중 Y축"){
+    const used=new Set(Object.keys(activeAxis));
+    const ndLabel = logTarget ? "나스닥 (Log)" : "나스닥";
+    const anns=[];
+    function mkAnn(x,color,label,side){ return {xref:"paper",yref:"paper",x:x,y:0.13,
+      xanchor:(side==="left"?"left":"right"),yanchor:"middle",text:label,textangle:-90,
+      showarrow:false,font:{color:color,size:10},bgcolor:"rgba(255,255,255,0.65)"}; }
+    const [yT,yC]=axisTitle("y",ndLabel);
+    const leftUsed=LEFT_AXIS_KEYS.filter(k=>used.has(k));
+    const rightUsed=RIGHT_AXIS_KEYS.filter(k=>used.has(k));
+    const L=leftUsed.length, R=rightUsed.length;
+    const domL = L?AXIS_STEP*1.15*L:0.0;
+    const domR = R>1?1.0-AXIS_STEP*(R-1):1.0;
+    layout.xaxis.domain=[domL, domR];
+    layout.yaxis=axisCfg("",yC,logTarget==="y");
+    anns.push(mkAnn(domL,yC,yT,"right"));
+    leftUsed.forEach((k,i)=>{ const pos=AXIS_STEP*1.15*(L-1-i); const [lb,cl]=axisTitle(k);
+      layout[AXIS_NAME_OF[k]]=axisCfg("",cl,logTarget===k,"left",true,pos,"free");
+      anns.push(mkAnn(pos,cl,lb,"right")); });
+    rightUsed.forEach((k,i)=>{ const [lb,cl]=axisTitle(k);
+      if(R===1){ layout[AXIS_NAME_OF[k]]=axisCfg("",cl,logTarget===k,"right",true); anns.push(mkAnn(domR,cl,lb,"left")); }
+      else { const pos=1.0-AXIS_STEP*i; layout[AXIS_NAME_OF[k]]=axisCfg("",cl,logTarget===k,"right",true,pos,"free"); anns.push(mkAnn(pos,cl,lb,"left")); } });
+    layout.annotations=anns;
+  } else {
+    const t={"동일 Y축":"지수값","지수화 (기준=100)":"지수화 (기준=100)","증감률 (수익률%)":"누적 수익률 (%)"}[S.ymode]||"지수값";
+    layout.yaxis=axisCfg(t,"#334155",useLog);
+    layout.xaxis.domain=[0,1];
+  }
+
+  // ── 호버 dot(교차점 표시)용 마커 트레이스: 사용 중인 Y축마다 1개 ──
+  const usedAxes = Object.keys(activeAxis);
+  const dotTraceIndex = {};
+  usedAxes.forEach(function(k){
+    dotTraceIndex[k] = traces.length;
+    traces.push({ type:"scatter", mode:"markers", x:[], y:[], yaxis:k,
+      marker:{ size:9, color:[], line:{color:"#ffffff", width:1.6} },
+      meta:"hoverdot", hoverinfo:"skip", showlegend:false, cliponaxis:false });
+  });
+
+  Plotly.react('plotly-div', traces, layout, {responsive:true, displaylogo:false});
+
+  // ── 값 박스 ──
+  const dateLabel = nd.dates[nd.dates.length-1];
+  const bl=[];
+  function bx(cond,color,name,val){ if(cond) bl.push(`<span style="color:${color}">●</span> ${name}: ${val}`); }
+  bx(S.show.nasdaq, COLORS.nasdaq,"나스닥", fmt(last.nasdaq,0));
+  bx(S.show.m2&&m2&&m2.values.length, COLORS.m2,"M2", fmt(last.m2,0));
+  bx(S.show.fed&&fed&&fed.values.length, COLORS.fed,"기준금리", fmt(last.fed,2)+"%");
+  bx(S.show.liquidity&&liqActual&&liqActual.values.length, COLORS.liquidity,"글로벌유동성", fmt(last.liquidity,2)+"%");
+  bx(S.show.dgs10&&d10&&d10.values.length, COLORS.dgs10,"美10Y", fmt(last.dgs10,2)+"%");
+  bx(S.show.dgs30&&d30&&d30.values.length, COLORS.dgs30,"美30Y", fmt(last.dgs30,2)+"%");
+  bx(S.show.spread&&spread&&spread.values.length, COLORS.spread,"30Y-10Y금리차", fmt(last.spread,2)+"%p");
+  const staticHTML = bl.length ? (`<b>${dateLabel} 기준</b><br>`+bl.join("<br>")) : "";
+  const box=document.getElementById('value-box'); box.innerHTML=staticHTML;
+
+  const pd=document.getElementById('plotly-div');
+  pd.removeAllListeners && pd.removeAllListeners('plotly_hover');
+  pd.removeAllListeners && pd.removeAllListeners('plotly_unhover');
+
+  // 회귀선/채널·호버dot 트레이스는 dot 대상에서 제외
+  function isIndicatorPt(p){
+    const nm=p.data.name||"";
+    if(p.data.meta==="hoverdot") return false;
+    if(nm.indexOf("회귀")>=0 || nm.indexOf("채널")>=0) return false;
+    return true;
+  }
+  // 언호버 시 dot 비우기
+  function clearDots(){
+    const idxs=usedAxes.map(k=>dotTraceIndex[k]);
+    if(!idxs.length) return;
+    const empt=idxs.map(()=>[]);
+    Plotly.restyle('plotly-div', {x:empt.map(()=>[]), y:empt.map(()=>[]), 'marker.color':empt.map(()=>[])}, idxs);
+  }
+
+  pd.on('plotly_hover', function(evt){
+    const pts=evt.points; if(!pts||!pts.length) return;
+    const xL=pts[0].x;
+
+    // 값 박스 갱신 (지표만)
+    const lines=pts.filter(p=>isIndicatorPt(p) && p.data.name)
+      .map(p=>{ const c=(p.data.line&&p.data.line.color)?p.data.line.color:"#334155";
+        const yv=(p.y!==undefined&&p.y!==null)?p.y:p.close;
+        return `<span style="color:${c}">●</span> ${p.data.name}: ${(typeof yv==='number')?yv.toLocaleString(undefined,{maximumFractionDigits:2}):yv}`; })
+      .join("<br>");
+    if(lines) box.innerHTML=`<b>${xL} 기준</b><br>`+lines;
+
+    // 세로 점선과 각 지표선의 교차점에 지표색 dot 표시 (Y축별 그룹)
+    const perX={}, perY={}, perC={};
+    pts.forEach(function(p){
+      if(!isIndicatorPt(p)) return;
+      const yv=(p.y!==undefined&&p.y!==null)?p.y:p.close;
+      if(yv===undefined||yv===null||(typeof yv==='number'&&isNaN(yv))) return;
+      const ax=p.data.yaxis||"y";
+      if(dotTraceIndex[ax]===undefined) return;
+      const col=(p.data.line&&p.data.line.color)?p.data.line.color
+               :((p.data.name&&p.data.name.indexOf("나스닥")>=0)?COLORS.nasdaq:"#334155");
+      (perX[ax]=perX[ax]||[]).push(p.x);
+      (perY[ax]=perY[ax]||[]).push(yv);
+      (perC[ax]=perC[ax]||[]).push(col);
+    });
+    const idxs=[], xu=[], yu=[], cu=[];
+    usedAxes.forEach(function(k){
+      idxs.push(dotTraceIndex[k]);
+      xu.push(perX[k]||[]); yu.push(perY[k]||[]); cu.push(perC[k]||[]);
+    });
+    if(idxs.length) Plotly.restyle('plotly-div', {x:xu, y:yu, 'marker.color':cu}, idxs);
+  });
+  pd.on('plotly_unhover', function(){ box.innerHTML=staticHTML; clearDots(); });
+
+  document.getElementById('updated').textContent="데이터 기준일: "+todayStr();
+}
+
+// ── UI 구성 ────────────────────────────────────────────────────────────────
+function buildUI(){
+  // 기간 칩
+  const pc=document.getElementById('period-chips');
+  pc.innerHTML=PERIODS.map(p=>`<span class="chip${p===S.period?' active':''}" data-p="${p}">${p}</span>`).join("");
+  pc.querySelectorAll('.chip').forEach(el=>el.onclick=()=>{
+    S.period=el.dataset.p;
+    pc.querySelectorAll('.chip').forEach(c=>c.classList.toggle('active',c.dataset.p===S.period));
+    S.start=periodStart(S.period,S.end);
+    document.getElementById('start-date').value=S.start;
+    render();
+  });
+  // 날짜
+  document.getElementById('start-date').value=S.start;
+  document.getElementById('end-date').value=S.end;
+  document.getElementById('start-date').onchange=e=>{ S.start=e.target.value; render(); };
+  document.getElementById('end-date').onchange=e=>{ S.end=e.target.value; render(); };
+  // Y축 모드
+  const ym=["다중 Y축","동일 Y축","지수화 (기준=100)","증감률 (수익률%)"];
+  document.getElementById('ymode-group').innerHTML=ym.map(m=>
+    `<label class="rdo"><input type="radio" name="ym" value="${m}"${m===S.ymode?' checked':''}> ${m}</label>`).join("");
+  document.querySelectorAll('input[name=ym]').forEach(el=>el.onchange=()=>{
+    S.ymode=el.value; document.getElementById('axis-section').style.display=(S.ymode==="다중 Y축")?"block":"none"; render(); });
+  // 차트 타입
+  const ct=["Line","Bar+Lines (봉차트)"];
+  document.getElementById('ctype-group').innerHTML=ct.map(c=>
+    `<label class="rdo"><input type="radio" name="ct" value="${c}"${c===S.ctype?' checked':''}> ${c}</label>`).join("");
+  document.querySelectorAll('input[name=ct]').forEach(el=>el.onchange=()=>{ S.ctype=el.value; render(); });
+  // 회귀
+  document.getElementById('show-reg').onchange=e=>{ S.showReg=e.target.checked;
+    document.getElementById('reg-opts').style.display=S.showReg?"block":"none"; render(); };
+  document.getElementById('reg-log').onchange=e=>{ S.regLog=e.target.checked; render(); };
+  document.getElementById('std-mult').oninput=e=>{ S.stdMult=parseFloat(e.target.value);
+    document.getElementById('std-val').textContent=S.stdMult.toFixed(1); render(); };
+  // 지표 + 스타일 옵션 (색상 / 굵기 / 선종류)
+  const DASHES=["solid","dot","dash","dashdot","longdash","longdashdot"];
+  const DASH_LB={solid:"실선",dot:"점선",dash:"파선",dashdot:"일점쇄선",longdash:"긴파선",longdashdot:"긴일점쇄선"};
+  document.getElementById('ind-group').innerHTML=INDICATORS.map(ind=>{
+    const st=S.style[ind.id];
+    return `<div class="ind-item">`+
+      `<label class="chk"><input type="checkbox" data-ind="${ind.id}"${S.show[ind.id]?' checked':''}> ${ind.label}</label>`+
+      `<div class="ind-opts">`+
+        `<input type="color" data-sc="${ind.id}" value="${st.color}" title="색상">`+
+        `<input type="number" data-sw="${ind.id}" value="${st.width}" min="0.5" max="6" step="0.1" title="선 굵기">`+
+        `<select data-sd="${ind.id}" title="선 종류">`+
+          DASHES.map(d=>`<option value="${d}"${d===st.dash?' selected':''}>${DASH_LB[d]}</option>`).join("")+
+        `</select>`+
+      `</div>`+
+    `</div>`;
+  }).join("");
+  document.querySelectorAll('input[data-ind]').forEach(el=>el.onchange=()=>{
+    S.show[el.dataset.ind]=el.checked; buildAxisSelectors(); render(); });
+  document.querySelectorAll('input[data-sc]').forEach(el=>el.oninput=()=>{ S.style[el.dataset.sc].color=el.value; render(); });
+  document.querySelectorAll('input[data-sw]').forEach(el=>el.onchange=()=>{ const w=parseFloat(el.value); if(!isNaN(w)&&w>0){ S.style[el.dataset.sw].width=w; render(); } });
+  document.querySelectorAll('select[data-sd]').forEach(el=>el.onchange=()=>{ S.style[el.dataset.sd].dash=el.value; render(); });
+  // 축 배정
+  buildAxisSelectors();
+  document.getElementById('axis-section').style.display=(S.ymode==="다중 Y축")?"block":"none";
+}
+
+function buildAxisSelectors(){
+  const g=document.getElementById('axis-group'); let html="";
+  INDICATORS.forEach(ind=>{
+    if(!S.show[ind.id]) return;
+    if(S.axis[ind.id]===undefined) S.axis[ind.id]=AXIS_KEY_OF[AXIS_CHOICES[ind.axDefault]];
+    const cur=S.axis[ind.id];
+    html+=`<div class="sb-sub">${ind.axLabel}</div><select data-ax="${ind.id}">`+
+      AXIS_CHOICES.map(c=>`<option value="${AXIS_KEY_OF[c]}"${AXIS_KEY_OF[c]===cur?' selected':''}>${c}</option>`).join("")+`</select>`;
+  });
+  g.innerHTML=html;
+  g.querySelectorAll('select[data-ax]').forEach(el=>el.onchange=()=>{ S.axis[el.dataset.ax]=el.value; render(); });
+}
+
+// ── 초기화 ────────────────────────────────────────────────────────────────
+function initDates(){
+  S.end = todayStr();
+  S.start = periodStart(S.period, S.end);
+}
+async function boot(){
+  // 햄버거
+  const app=document.getElementById('app');
+  document.getElementById('hamburger').onclick=()=>app.classList.toggle('open');
+  document.getElementById('overlay').onclick=()=>app.classList.remove('open');
+  try{
+    const res=await fetch('data.json?ts='+Date.now());
+    if(!res.ok) throw new Error('data.json 로드 실패 ('+res.status+')');
+    DATA=await res.json();
+  }catch(e){
+    document.getElementById('status').innerHTML='<div class="status err">데이터를 불러오지 못했습니다: '+e.message+
+      '<br>GitHub Actions가 data.json을 생성했는지 확인하세요.</div>';
+    return;
+  }
+  initDates();
+  // 데이터 범위로 end 보정
+  if(DATA.nasdaq && DATA.nasdaq.dates.length){
+    const lastD=DATA.nasdaq.dates[DATA.nasdaq.dates.length-1];
+    if(lastD<S.end) S.end=lastD;
+    S.start=periodStart(S.period,S.end);
+  }
+  buildUI();
+  render();
+  window.addEventListener('resize',()=>{ /* Plotly responsive 처리 */ });
+}
+boot();
+
+</script>
+</body>
+</html>
